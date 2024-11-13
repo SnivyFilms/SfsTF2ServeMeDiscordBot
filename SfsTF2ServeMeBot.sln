@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SfsTF2ServeMeBot", "SfsTF2ServeMeBot\SfsTF2ServeMeBot.csproj", "{70CFC6AC-15E3-43AF-8C7A-54CFC57CE07C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{70CFC6AC-15E3-43AF-8C7A-54CFC57CE07C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70CFC6AC-15E3-43AF-8C7A-54CFC57CE07C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70CFC6AC-15E3-43AF-8C7A-54CFC57CE07C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70CFC6AC-15E3-43AF-8C7A-54CFC57CE07C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

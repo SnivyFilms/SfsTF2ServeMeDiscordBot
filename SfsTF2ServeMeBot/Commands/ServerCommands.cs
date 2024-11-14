@@ -23,30 +23,31 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
     string endDate,
     string endTime,
     string password,
+    string stvPassword,
     string rcon,
     string map,
     int serverId,
-    [Choice("RGL 6s 5CP Improved Timers", 99)]
-    [Choice("RGL 6s 5CP Match Half 1", 65)]
-    [Choice("RGL 6s 5CP Match Half 2", 66)]
-    [Choice("RGL 6s 5CP Match Pro", 109)]
-    [Choice("RGL 6s 5CP Scrim", 69)]
-    [Choice("RGL 6s KOTH", 67)]
-    [Choice("RGL 6s KOTH BO5", 68)]
-    [Choice("RGL 6s KOTH Pro", 110)]
-    [Choice("RGL 6s KOTH Scrim", 113)]
-    [Choice("RGL 7s KOTH", 33)]
-    [Choice("RGL 7s KOTH BO5", 32)]
-    [Choice("RGL 7s Stopwatch", 34)]
-    [Choice("RGL HL KOTH", 53)]
-    [Choice("RGL HL KOTH BO5", 54)]
-    [Choice("RGL HL Stopwatch", 55)]
-    [Choice("RGL NR6s 5CP Match Half 1", 86)]
-    [Choice("RGL NR6s 5CP Match Half 2", 87)]
-    [Choice("RGL NR6s 5CP Scrim", 88)]
-    [Choice("RGL NR6s KOTH", 91)]
-    [Choice("RGL NR6s KOTH BO5", 92)]
-    [Choice("RGL NR6s Stopwatch", 93)]
+    [Choice("RGL 6s 5CP Improved Timers", 99),
+    Choice("RGL 6s 5CP Match Half 1", 65),
+    Choice("RGL 6s 5CP Match Half 2", 66),
+    Choice("RGL 6s 5CP Match Pro", 109),
+    Choice("RGL 6s 5CP Scrim", 69),
+    Choice("RGL 6s KOTH", 67),
+    Choice("RGL 6s KOTH BO5", 68),
+    Choice("RGL 6s KOTH Pro", 110),
+    Choice("RGL 6s KOTH Scrim", 113),
+    Choice("RGL 7s KOTH", 33),
+    Choice("RGL 7s KOTH BO5", 32),
+    Choice("RGL 7s Stopwatch", 34),
+    Choice("RGL HL KOTH", 53),
+    Choice("RGL HL KOTH BO5", 54),
+    Choice("RGL HL Stopwatch", 55),
+    Choice("RGL NR6s 5CP Match Half 1", 86),
+    Choice("RGL NR6s 5CP Match Half 2", 87),
+    Choice("RGL NR6s 5CP Scrim", 88),
+    Choice("RGL NR6s KOTH", 91),
+    Choice("RGL NR6s KOTH BO5", 92),
+    Choice("RGL NR6s Stopwatch", 93)]
     int startingConfigId,
     bool enablePlugins,
     bool enableDemos)
@@ -57,12 +58,22 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
         {
             // Call the ServemeService to create the reservation
             var reservationResponse = await _servemeService.CreateReservationAsync(
-                startDate, startTime, endDate, endTime, password, rcon, map, serverId, startingConfigId, enablePlugins, enableDemos);
+                startDate, 
+                startTime, 
+                endDate, 
+                endTime, 
+                password, 
+                stvPassword, 
+                rcon, 
+                map, 
+                serverId, 
+                startingConfigId, 
+                enablePlugins, 
+                enableDemos);
 
             // Extract information from the response
             var reservation = reservationResponse["reservation"];
             var server = reservation["server"];
-            var actions = reservationResponse["actions"];
 
             // Create an embed to show reservation details, excluding RCON and sensitive information
             var embed = new EmbedBuilder()
@@ -109,7 +120,11 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
 
         try
         {
-            var availableServers = await _servemeService.FindServersAsync(startDate, startTime, endDate, endTime);
+            var availableServers = await _servemeService.FindServersAsync(
+                startDate, 
+                startTime, 
+                endDate, 
+                endTime);
             var servers = availableServers["servers"]?.ToList();
         
             if (servers == null || servers.Count == 0)
@@ -173,7 +188,103 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
             Console.WriteLine($"Unexpected error: {ex.Message}");
         }
     }
-    
+
+[SlashCommand("update_reservation", "Allows you to update a preexisting reservation")]
+public async Task UpdateReservation(
+    int reservationId,
+    int? serverId = null,
+    string? startDate = null,
+    string? startTime = null,
+    string? endDate = null,
+    string? endTime = null,
+    string? password = null,
+    string? stvPassword = null,
+    string? map = null,
+    [Choice("RGL 6s 5CP Improved Timers", 99),
+    Choice("RGL 6s 5CP Match Half 1", 65),
+    Choice("RGL 6s 5CP Match Half 2", 66),
+    Choice("RGL 6s 5CP Match Pro", 109),
+    Choice("RGL 6s 5CP Scrim", 69),
+    Choice("RGL 6s KOTH", 67),
+    Choice("RGL 6s KOTH BO5", 68),
+    Choice("RGL 6s KOTH Pro", 110),
+    Choice("RGL 6s KOTH Scrim", 113),
+    Choice("RGL 7s KOTH", 33),
+    Choice("RGL 7s KOTH BO5", 32),
+    Choice("RGL 7s Stopwatch", 34),
+    Choice("RGL HL KOTH", 53),
+    Choice("RGL HL KOTH BO5", 54),
+    Choice("RGL HL Stopwatch", 55),
+    Choice("RGL NR6s 5CP Match Half 1", 86),
+    Choice("RGL NR6s 5CP Match Half 2", 87),
+    Choice("RGL NR6s 5CP Scrim", 88),
+    Choice("RGL NR6s KOTH", 91),
+    Choice("RGL NR6s KOTH BO5", 92),
+    Choice("RGL NR6s Stopwatch", 93)]
+    int? startingConfigId = null,
+    bool? enablePlugins = null,
+    bool? enableDemos = null)
+{
+    await DeferAsync();
+    try
+    {
+        var updatedReservation = await _servemeService.UpdateReservationAsync(
+            reservationId, 
+            serverId,
+            startDate, 
+            startTime, 
+            endDate, 
+            endTime, 
+            password, 
+            stvPassword, 
+            map, 
+            startingConfigId,
+            enablePlugins,
+            enableDemos);
+
+        // Extract the details from the reservation and server objects
+        var reservation = updatedReservation["reservation"];
+        var server = reservation["server"];
+
+        int serverConfigId = reservation["server_config_id"]?.Value<int>() ?? -1;
+        string configName = ConfigNames.ContainsKey(serverConfigId) 
+            ? ConfigNames[serverConfigId] 
+            : "Unknown Config";
+        
+        // Format the reservation details into an embed
+        var embed = new EmbedBuilder()
+            .WithTitle("Server Reservation Updated Successfully")
+            .AddField("Reservation ID", reservation["id"]?.ToString() ?? "N/A", true)
+            .AddField("Start Time", reservation["starts_at"]?.ToString() ?? "N/A", true)
+            .AddField("End Time", reservation["ends_at"]?.ToString() ?? "N/A", true)
+            .AddField("Server IP", server["ip_and_port"]?.ToString() ?? "N/A", true)
+            .AddField("SDR IP", $"{reservation["sdr_ip"]}:{reservation["sdr_port"]}" ?? "N/A", true)
+            .AddField("Password", reservation["password"]?.ToString() ?? "N/A", true)
+            .AddField("STV Password", reservation["tv_password"]?.ToString() ?? "N/A", true)
+            .AddField("Starting Map", reservation["first_map"]?.ToString() ?? "N/A", true)
+            .AddField("Plugins Enabled", reservation["enable_plugins"]?.ToString() ?? "N/A", true)
+            .AddField("Demos Enabled", reservation["enable_demos_tf"]?.ToString() ?? "N/A", true)
+            .AddField("Selected Config", configName, true)
+            .WithColor(Color.Green)
+            .Build();
+
+        // Send the embed to the Discord channel
+        await FollowupAsync(embed: embed);
+
+        // Send the RCON details privately to the user
+        var dmChannel = await Context.User.CreateDMChannelAsync();
+        await dmChannel.SendMessageAsync(
+            $"**RCON Information**:\nRCON Address: {server["ip_and_port"]}\nRCON Password: {reservation["rcon"]}");
+    }
+    catch (HttpRequestException ex)
+    {
+        // Notify the user of the error
+        await FollowupAsync("There was an error updating the server reservation. Please try again later.");
+        Console.WriteLine($"Error updating reservation: {ex.Message}");
+    }
+}
+
+
     private EmbedBuilder BuildServerEmbed(List<JToken> servers, int pageIndex)
     {
         var embed = new EmbedBuilder()

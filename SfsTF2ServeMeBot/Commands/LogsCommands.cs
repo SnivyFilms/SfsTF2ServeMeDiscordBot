@@ -1,5 +1,5 @@
 ﻿// Commands/LogsCommands.cs
-
+/*
 using Discord;
 using Discord.Interactions;
 using SfsTF2ServeMeBot.Services;
@@ -28,4 +28,4 @@ public class LogsCommands : InteractionModuleBase<SocketInteractionContext>
 
         await RespondAsync(embed: embed.Build());
     }
-}
+}*/

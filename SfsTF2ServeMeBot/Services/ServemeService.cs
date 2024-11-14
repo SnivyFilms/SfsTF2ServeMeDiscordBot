@@ -85,15 +85,11 @@ namespace SfsTF2ServeMeBot.Services
 
             var response = await _httpClient.PostAsJsonAsync($"https://na.serveme.tf/api/reservations/find_servers?api_key={_apiKey}", requestBody);
 
-            // Step 1: Read the response as a string and log it for inspection
             var content = await response.Content.ReadAsStringAsync();
-            //Console.WriteLine($"Raw JSON Response: {content}");  // Log raw response for debugging
-
-            // Step 2: Attempt to parse the JSON manually if necessary
             JObject availableServers;
             try
             {
-                availableServers = JObject.Parse(content); // Attempt to parse into JObject
+                availableServers = JObject.Parse(content);
             }
             catch (JsonReaderException ex)
             {
@@ -107,102 +103,85 @@ namespace SfsTF2ServeMeBot.Services
         public async Task<JObject> UpdateReservationAsync(int reservationId, int? serverId = null, string? startDate = null, string? startTime = null,
             string? endDate = null, string? endTime = null, string? password = null, string? stvPassword = null, string? map = null,
             int? serverConfigId = null, bool? enablePlugins = null, bool? enableDemos = null)
-{
-    // Step 1: Retrieve the reservation details to get the patch URL
-    var reservationDetailsResponse = await _httpClient.GetAsync($"https://na.serveme.tf/api/reservations/{reservationId}?api_key={_apiKey}");
-    if (!reservationDetailsResponse.IsSuccessStatusCode)
-    {
-        throw new HttpRequestException($"Failed to retrieve reservation details. Status: {(int)reservationDetailsResponse.StatusCode}");
-    }
+        { 
+            var reservationDetailsResponse = await _httpClient.GetAsync($"https://na.serveme.tf/api/reservations/{reservationId}?api_key={_apiKey}");
+            if (!reservationDetailsResponse.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException($"Failed to retrieve reservation details. Status: {(int)reservationDetailsResponse.StatusCode}");
+            }
 
-    var reservationContent = await reservationDetailsResponse.Content.ReadAsStringAsync();
-    var reservationJson = JObject.Parse(reservationContent);
+            var reservationContent = await reservationDetailsResponse.Content.ReadAsStringAsync();
+            var reservationJson = JObject.Parse(reservationContent);
 
-    // Extract the dynamic "patch" URL from the "actions" object
-    var patchUrl = reservationJson["actions"]?["patch"]?.ToString();
-    if (string.IsNullOrEmpty(patchUrl))
-    {
-        throw new InvalidOperationException("Patch URL not found in reservation details.");
-    }
+            var patchUrl = reservationJson["actions"]?["patch"]?.ToString();
+            if (string.IsNullOrEmpty(patchUrl))
+            {
+                throw new InvalidOperationException("Patch URL not found in reservation details.");
+            }
+            dynamic reservationUpdate = new ExpandoObject();
 
-    // Step 2: Prepare the update payload with conditional properties
-    dynamic reservationUpdate = new ExpandoObject();
+            if (serverId.HasValue) reservationUpdate.server_id = serverId;
+            if (!string.IsNullOrEmpty(startDate) && !string.IsNullOrEmpty(startTime))
+                reservationUpdate.starts_at = $"{startDate}T{startTime}:00.000-05:00";
+            if (!string.IsNullOrEmpty(endDate) && !string.IsNullOrEmpty(endTime))
+                reservationUpdate.ends_at = $"{endDate}T{endTime}:00.000-05:00";
+            if (!string.IsNullOrEmpty(password)) reservationUpdate.password = password;
+            if (!string.IsNullOrEmpty(stvPassword)) reservationUpdate.tv_password = stvPassword;
+            if (!string.IsNullOrEmpty(map)) reservationUpdate.first_map = map;
+            if (serverConfigId.HasValue) reservationUpdate.server_config_id = serverConfigId;
+            if (enablePlugins.HasValue) reservationUpdate.enable_plugins = enablePlugins.Value;
+            if (enableDemos.HasValue) reservationUpdate.enable_demos_tf = enableDemos.Value;
 
-    if (serverId.HasValue) reservationUpdate.server_id = serverId;
-    if (!string.IsNullOrEmpty(startDate) && !string.IsNullOrEmpty(startTime))
-        reservationUpdate.starts_at = $"{startDate}T{startTime}:00.000-05:00";
-    if (!string.IsNullOrEmpty(endDate) && !string.IsNullOrEmpty(endTime))
-        reservationUpdate.ends_at = $"{endDate}T{endTime}:00.000-05:00";
-    if (!string.IsNullOrEmpty(password)) reservationUpdate.password = password;
-    if (!string.IsNullOrEmpty(stvPassword)) reservationUpdate.tv_password = stvPassword;
-    if (!string.IsNullOrEmpty(map)) reservationUpdate.first_map = map;
-    if (serverConfigId.HasValue) reservationUpdate.server_config_id = serverConfigId;
-    if (enablePlugins.HasValue) reservationUpdate.enable_plugins = enablePlugins.Value;
-    if (enableDemos.HasValue) reservationUpdate.enable_demos_tf = enableDemos.Value;
+            var requestBody = new { reservation = reservationUpdate };
+            var jsonContent = JsonConvert.SerializeObject(requestBody);
+            var httpContent = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+            var request = new HttpRequestMessage(new HttpMethod("PATCH"), patchUrl)
+            {
+                Content = httpContent
+            };
 
-    // Wrap the reservation object within the main request body
-    var requestBody = new { reservation = reservationUpdate };
-
-    // Serialize the request body to JSON
-    var jsonContent = JsonConvert.SerializeObject(requestBody);
-    var httpContent = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
-
-    // Step 3: Send the PATCH request to the patch URL
-    var request = new HttpRequestMessage(new HttpMethod("PATCH"), patchUrl)
-    {
-        Content = httpContent
-    };
-
-    var response = await _httpClient.SendAsync(request);
-    var content = await response.Content.ReadAsStringAsync();
-    //var response2 = await _httpClient.SendAsync($"https://na.serveme.tf/api/reservations/{reservationId}?api_key={_apiKey}");
-    //var reservationDetailsResponse2 = await _httpClient.GetAsync($"https://na.serveme.tf/api/reservations/{reservationId}?api_key={_apiKey}");
-
-    if (!response.IsSuccessStatusCode)
-    {
-        throw new HttpRequestException($"Failed to update reservation. Status: {(int)response.StatusCode} - Content: {content}");
-    }
-
-    JObject updateResponse;
-    try
-    {
-        updateResponse = JObject.Parse(content); // Attempt to parse into JObject
-        Console.WriteLine(updateResponse);
-    }
-    catch (JsonReaderException ex)
-    {
-        Console.WriteLine($"JSON Parsing Error: {ex.Message}");
-        throw;  // Rethrow to handle in calling method
-    }
+            var response = await _httpClient.SendAsync(request);
+            var content = await response.Content.ReadAsStringAsync();
     
-    var updatedReservationResponse = await _httpClient.GetAsync($"https://na.serveme.tf/api/reservations/{reservationId}?api_key={_apiKey}");
-    if (!updatedReservationResponse.IsSuccessStatusCode)
-    {
-        throw new HttpRequestException($"Failed to retrieve updated reservation details. Status: {(int)updatedReservationResponse.StatusCode}");
-    }
 
-    // Parse the updated reservation details JSON
-    var updatedContent = await updatedReservationResponse.Content.ReadAsStringAsync();
-    JObject updatedReservation;
-    try
-    {
-        updatedReservation = JObject.Parse(updatedContent);
-        Console.WriteLine($"Updated reservation data: {updatedReservation}");
-    }
-    catch (JsonReaderException ex)
-    {
-        Console.WriteLine($"JSON Parsing Error: {ex.Message}");
-        throw;  // Rethrow to handle in calling method
-    }
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException($"Failed to update reservation. Status: {(int)response.StatusCode} - Content: {content}");
+            }
 
-    // Return the full updated reservation details to the calling method
-    return updatedReservation;
+            JObject updateResponse;
+            try
+            {
+                updateResponse = JObject.Parse(content);
+                Console.WriteLine(updateResponse);
+            }
+            catch (JsonReaderException ex)
+            {
+                Console.WriteLine($"JSON Parsing Error: {ex.Message}");
+                throw;
+            }
+    
+            var updatedReservationResponse = await _httpClient.GetAsync($"https://na.serveme.tf/api/reservations/{reservationId}?api_key={_apiKey}");
+            if (!updatedReservationResponse.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException($"Failed to retrieve updated reservation details. Status: {(int)updatedReservationResponse.StatusCode}");
+            }
+            var updatedContent = await updatedReservationResponse.Content.ReadAsStringAsync();
+            JObject updatedReservation;
+            try
+            {
+                updatedReservation = JObject.Parse(updatedContent);
+                Console.WriteLine($"Updated reservation data: {updatedReservation}");
+            }
+            catch (JsonReaderException ex)
+            {
+                Console.WriteLine($"JSON Parsing Error: {ex.Message}");
+                throw;
+            }
+
+            return updatedReservation;
 }
 
-
-
-
-        // New method to handle the "Test GET Reservation" request
         public async Task<JObject> GetTestReservationAsync()
         {
             var response = await _httpClient.GetAsync($"https://na.serveme.tf/api/reservations/new?api_key={_apiKey}");

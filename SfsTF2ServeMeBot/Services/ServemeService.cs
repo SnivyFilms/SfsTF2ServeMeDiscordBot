@@ -2,8 +2,8 @@
 
 using System.Net.Http.Json;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SfsTF2ServeMeBot.Models;
 
 namespace SfsTF2ServeMeBot.Services
 {
@@ -25,10 +25,10 @@ namespace SfsTF2ServeMeBot.Services
 
         // Existing method for creating reservations
         public async Task<JObject> CreateReservationAsync(string startDate, string startTime, string endDate,
-            string endTime, string passwordString, string rconString, string mapString, int? serverConfigId)
+            string endTime, string passwordString, string rconString, string mapString, int serverId, int? serverConfigId, bool enablePlugins, bool enableDemos)
         {
-            var startsAt = $"{startDate}T{startTime}:00.000+02:00";  // Ensure the correct timezone format
-            var endsAt = $"{endDate}T{endTime}:00.000+02:00";  // Ensure the correct timezone format
+            var startsAt = $"{startDate}T{startTime}:00.000-05:00";
+            var endsAt = $"{endDate}T{endTime}:00.000-05:00";
 
             var requestBody = new
             {
@@ -39,22 +39,41 @@ namespace SfsTF2ServeMeBot.Services
                     password = passwordString,
                     rcon = rconString,
                     first_map = mapString,
+                    server_id = serverId,
                     server_config_id = serverConfigId,
+                    enable_plugins = enablePlugins,
+                    enable_demos_tf = enableDemos
                 }
             };
 
             var response = await _httpClient.PostAsJsonAsync($"https://na.serveme.tf/api/reservations?api_key={_apiKey}", requestBody);
-            response.EnsureSuccessStatusCode();
-            var reservationResponse = await response.Content.ReadFromJsonAsync<JObject>();  // Return the response as JObject
+            var content = await response.Content.ReadAsStringAsync();
+            
+            Console.WriteLine($"Raw JSON Response: {content}");  // Log raw response for debugging
+
+            // Step 2: Attempt to parse the JSON manually if necessary
+            JObject reservationResponse;
+            try
+            {
+                reservationResponse = JObject.Parse(content); // Attempt to parse into JObject
+            }
+            catch (JsonReaderException ex)
+            {
+                Console.WriteLine($"JSON Parsing Error: {ex.Message}");
+                throw;  // Rethrow to handle in calling method
+            }
+
             return reservationResponse;
+            //var reservationResponse = await response.Content.ReadFromJsonAsync<JObject>();  // Return the response as JObject
+            //return reservationResponse;
         }
 
 
         // Existing method for finding servers
-        public async Task<JObject> FindServersAsync(string startDate, string startTime, string endDate, string endTime, string location)
+        public async Task<JObject> FindServersAsync(string startDate, string startTime, string endDate, string endTime)
         {
-            var startsAt = $"{startDate}T{startTime}:00.000";
-            var endsAt = $"{endDate}T{endTime}:00.000";
+            var startsAt = $"{startDate}T{startTime}:00.000-05:00";
+            var endsAt = $"{endDate}T{endTime}:00.000-05:00";
 
             var requestBody = new
             {
@@ -62,15 +81,27 @@ namespace SfsTF2ServeMeBot.Services
                 {
                     starts_at = startsAt,
                     ends_at = endsAt,
-                    flag = "us"
                 }
             };
 
             var response = await _httpClient.PostAsJsonAsync($"https://na.serveme.tf/api/reservations/find_servers?api_key={_apiKey}", requestBody);
-            var content = await response.Content.ReadAsStringAsync(); // Read response content
-            Console.WriteLine(content); // Debugging the raw response
-            response.EnsureSuccessStatusCode();
-            var availableServers = await response.Content.ReadFromJsonAsync<JObject>();
+
+            // Step 1: Read the response as a string and log it for inspection
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Raw JSON Response: {content}");  // Log raw response for debugging
+
+            // Step 2: Attempt to parse the JSON manually if necessary
+            JObject availableServers;
+            try
+            {
+                availableServers = JObject.Parse(content); // Attempt to parse into JObject
+            }
+            catch (JsonReaderException ex)
+            {
+                Console.WriteLine($"JSON Parsing Error: {ex.Message}");
+                throw;  // Rethrow to handle in calling method
+            }
+
             return availableServers;
         }
 

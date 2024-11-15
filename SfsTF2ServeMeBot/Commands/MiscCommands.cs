@@ -15,6 +15,7 @@ public class MiscCommands : InteractionModuleBase<SocketInteractionContext>
             .WithTitle("Pong!")
             .AddField("🏓", $"{latency}ms", true)
             .WithFooter(EmbedFooterModule.Footer)
+            .WithColor(Color.DarkTeal)
             .Build();
         await FollowupAsync(embed: embed);
     }

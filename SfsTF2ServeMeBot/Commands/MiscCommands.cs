@@ -43,6 +43,7 @@ public class MiscCommands : InteractionModuleBase<SocketInteractionContext>
             .AddField("Command: /reserve_server", "Fill out the required fields and it will reserve a server. Most info will be publicly displayed, rcon info will be sent to the user who ran the command.", true)
             .AddField("Command: /update_reservation", "Fill out the reservation id and any of the fields to update the reservation.", true)
             .AddField("Command: /help", "Show this help message.", true)
+            .AddField("Command: /ping", "Gets the latency of the bot.", true)
             .WithColor(Color.Magenta)
             .WithFooter(EmbedFooterModule.Footer)
             .Build();

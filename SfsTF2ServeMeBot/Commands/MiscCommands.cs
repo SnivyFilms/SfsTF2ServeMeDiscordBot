@@ -13,7 +13,7 @@ public class MiscCommands : InteractionModuleBase<SocketInteractionContext>
         int latency = Context.Client.Latency;
         var embed = new EmbedBuilder()
             .WithTitle("Pong!")
-            .AddField("Latency", $"🏓 '{latency}ms'", true)
+            .AddField("🏓", $"{latency}ms", true)
             .WithFooter(EmbedFooterModule.Footer)
             .Build();
         await FollowupAsync(embed: embed);

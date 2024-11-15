@@ -1,5 +1,4 @@
-﻿// Commands/DemosCommands.cs
-/*
+﻿/*
 using Discord;
 using Discord.Interactions;
 using SfsTF2ServeMeBot.Services;

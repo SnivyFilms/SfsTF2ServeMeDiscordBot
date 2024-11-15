@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-namespace SfsTF2ServeMeBot.Modules;
+﻿namespace SfsTF2ServeMeBot.Modules;
 
 public class EmbedFooterModule
 {

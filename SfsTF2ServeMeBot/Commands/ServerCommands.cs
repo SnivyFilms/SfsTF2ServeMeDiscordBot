@@ -1,6 +1,4 @@
-﻿// ServerCommands.cs
-
-using Discord;
+﻿using Discord;
 using Discord.Interactions;
 using Newtonsoft.Json.Linq;
 using SfsTF2ServeMeBot.Modules;

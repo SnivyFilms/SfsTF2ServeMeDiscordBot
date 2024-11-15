@@ -1,6 +1,4 @@
-﻿// Services/ServemeService.cs
-
-using System.Dynamic;
+﻿using System.Dynamic;
 using System.Net.Http.Json;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;

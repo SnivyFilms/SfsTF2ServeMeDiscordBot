@@ -18,39 +18,41 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
 
     [SlashCommand("reserve_server", "Reserve a server")]
     public async Task ReserveServer(
-        string startDate,
-        string startTime,
-        string endDate,
-        string endTime,
-        string password,
-        string stvPassword,
-        string rcon,
-        string map,
-        int serverId,
-        [Choice("RGL 6s 5CP Improved Timers", 99),
-        Choice("RGL 6s 5CP Match Half 1", 65),
-        Choice("RGL 6s 5CP Match Half 2", 66),
-        Choice("RGL 6s 5CP Match Pro", 109),
-        Choice("RGL 6s 5CP Scrim", 69),
-        Choice("RGL 6s KOTH", 67),
-        Choice("RGL 6s KOTH BO5", 68),
-        Choice("RGL 6s KOTH Pro", 110),
-        Choice("RGL 6s KOTH Scrim", 113),
-        Choice("RGL 7s KOTH", 33),
-        Choice("RGL 7s KOTH BO5", 32),
-        Choice("RGL 7s Stopwatch", 34),
-        Choice("RGL HL KOTH", 53),
-        Choice("RGL HL KOTH BO5", 54),
-        Choice("RGL HL Stopwatch", 55),
-        Choice("RGL NR6s 5CP Match Half 1", 86),
-        Choice("RGL NR6s 5CP Match Half 2", 87),
-        Choice("RGL NR6s 5CP Scrim", 88),
-        Choice("RGL NR6s KOTH", 91),
-        Choice("RGL NR6s KOTH BO5", 92),
-        Choice("RGL NR6s Stopwatch", 93)]
+        [Summary("StartDate", "The start date in YYYY-MM-DD. I.E. 2024-04-20 for April 20th, 2024")] string startDate,
+        [Summary("StartTime", "The start time in a 24 hour clock format HH:MM. I.E. 21:30 for 9:30 PM. Time's in US East")] string startTime,
+        [Summary("EndDate", "The start date in YYYY-MM-DD. I.E. 2024-06-09 for June 9th, 2024")] string endDate,
+        [Summary("EndTime", "The start time in a 24 hour clock format HH:MM. I.E. 23:30 for 11:30 PM. Time's in US East")] string endTime,
+        [Summary("ServerPassword", "This is the password that people will use to connect to the server.")] string password,
+        [Summary("STVPassword", "This is the password that people will use to connect to the STV of server.")] string stvPassword,
+        [Summary("RconPassword", "Rcon Password, This cannot be changed after reserving the server. This will be DMed to you.")] string rcon,
+        [Summary("Map", "This is the map that the server will start on.")] string map,
+        [Summary("ServerId", "This is the ServerId of the server you want to reserve, use /find_server to get the ServerId.")]int serverId,
+        [Summary("StartingConfig", "This is the config that the server will start on."),
+         Choice("RGL 6s 5CP Improved Timers", 99),
+         Choice("RGL 6s 5CP Match Half 1", 65),
+         Choice("RGL 6s 5CP Match Half 2", 66),
+         Choice("RGL 6s 5CP Match Pro", 109),
+         Choice("RGL 6s 5CP Scrim", 69),
+         Choice("RGL 6s KOTH", 67),
+         Choice("RGL 6s KOTH BO5", 68),
+         Choice("RGL 6s KOTH Pro", 110),
+         Choice("RGL 6s KOTH Scrim", 113),
+         Choice("RGL 7s KOTH", 33),
+         Choice("RGL 7s KOTH BO5", 32),
+         Choice("RGL 7s Stopwatch", 34),
+         Choice("RGL HL KOTH", 53),
+         Choice("RGL HL KOTH BO5", 54),
+         Choice("RGL HL Stopwatch", 55),
+         Choice("RGL NR6s 5CP Match Half 1", 86),
+         Choice("RGL NR6s 5CP Match Half 2", 87),
+         Choice("RGL NR6s 5CP Scrim", 88),
+         Choice("RGL NR6s KOTH", 91),
+         Choice("RGL NR6s KOTH BO5", 92),
+         Choice("RGL NR6s Stopwatch", 93)]
         int startingConfigId,
-        bool enablePlugins,
-        bool enableDemos)
+        [Summary("EnablePlugins", "Enables/Disables plugins, such as SOAPs.")] bool enablePlugins,
+        [Summary("EnableDemos", "Enables/Disables STV demo uploading to demos.tf.")] bool enableDemos,
+        [Summary("AutoEnd", "Enables/Disables the server from ending when the server empties out.")] bool autoEnd)
     {
         await DeferAsync();
 
@@ -68,7 +70,8 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                 serverId, 
                 startingConfigId, 
                 enablePlugins, 
-                enableDemos);
+                enableDemos,
+                autoEnd);
 
             var reservation = reservationResponse["reservation"];
             var server = reservation["server"];
@@ -85,6 +88,7 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                 .AddField("Starting Map", reservation["first_map"]?.ToString() ?? "N/A", true)
                 .AddField("Plugins Enabled", reservation["enable_plugins"]?.ToString() ?? "N/A", true)
                 .AddField("Enabled Demos.tf", reservation["enable_demos_tf"]?.ToString() ?? "N/A", true)
+                .AddField("Auto End Enabled", reservation["auto_end"]?.ToString() ?? "N/A", true)
                 .AddField("Selected Config", ConfigNames.ContainsKey(startingConfigId) ? ConfigNames[startingConfigId] : "Unknown Config", true)
                 .WithColor(Color.Green)
                 .Build();
@@ -106,10 +110,10 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
 
     [SlashCommand("find_servers", "Find available TF2 servers")]
     public async Task FindServers(
-        string startDate, 
-        string startTime, 
-        string endDate, 
-        string endTime)
+        [Summary("StartDate", "The start date in YYYY-MM-DD. I.E. 2024-04-20 for April 20th, 2024")] string startDate,
+        [Summary("StartTime", "The start time in a 24 hour clock format HH:MM. I.E. 21:30 for 9:30 PM. Time's in US East")] string startTime,
+        [Summary("EndDate", "The start date in YYYY-MM-DD. I.E. 2024-06-09 for June 9th, 2024")] string endDate,
+        [Summary("EndTime", "The start time in a 24 hour clock format HH:MM. I.E. 23:30 for 11:30 PM. Time's in US East")] string endTime)
     {
         await DeferAsync();
 
@@ -178,39 +182,41 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
 
     [SlashCommand("update_reservation", "Allows you to update a preexisting reservation")]
     public async Task UpdateReservation(
-        int reservationId,
-        int? serverId = null,
-        string? startDate = null,
-        string? startTime = null,
-        string? endDate = null,
-        string? endTime = null,
-        string? password = null,
-        string? stvPassword = null,
-        string? map = null,
-        [Choice("RGL 6s 5CP Improved Timers", 99),
-        Choice("RGL 6s 5CP Match Half 1", 65),
-        Choice("RGL 6s 5CP Match Half 2", 66),
-        Choice("RGL 6s 5CP Match Pro", 109),
-        Choice("RGL 6s 5CP Scrim", 69),
-        Choice("RGL 6s KOTH", 67),
-        Choice("RGL 6s KOTH BO5", 68),
-        Choice("RGL 6s KOTH Pro", 110),
-        Choice("RGL 6s KOTH Scrim", 113),
-        Choice("RGL 7s KOTH", 33),
-        Choice("RGL 7s KOTH BO5", 32),
-        Choice("RGL 7s Stopwatch", 34),
-        Choice("RGL HL KOTH", 53),
-        Choice("RGL HL KOTH BO5", 54),
-        Choice("RGL HL Stopwatch", 55),
-        Choice("RGL NR6s 5CP Match Half 1", 86),
-        Choice("RGL NR6s 5CP Match Half 2", 87),
-        Choice("RGL NR6s 5CP Scrim", 88),
-        Choice("RGL NR6s KOTH", 91),
-        Choice("RGL NR6s KOTH BO5", 92),
-        Choice("RGL NR6s Stopwatch", 93)]
+        [Summary("ReservationId", "You will need this to change anything with the reservation.")] int reservationId,
+        [Summary("ServerId", "This is the ServerId of the server you want to change to, use /find_server to get the ServerId.")]int? serverId = null,
+        [Summary("StartDate", "This is where you can change the start date in YYYY-MM-DD.")] string? startDate = null,
+        [Summary("StartTime", "This is where you can change the start time in a 24 hour clock format HH:MM")] string? startTime = null,
+        [Summary("EndDate", "This is where you can change the start date in YYYY-MM-DD.")] string? endDate = null,
+        [Summary("EndTime", "This is where you can change the start time in a 24 hour clock format HH:MM.")] string? endTime = null,
+        [Summary("ServerPassword", "This is where you can change the password that people will use to connect to the server.")] string? password = null,
+        [Summary("STVPassword", "This is where you can change the password that people will use to connect to the STV of server.")] string? stvPassword = null,
+        [Summary("Map", "This is where you can change the map that the server will start on.")] string? map = null,
+        [Summary("StartingConfig", "This is where you can change the config that the server will start on."),
+         Choice("RGL 6s 5CP Improved Timers", 99),
+         Choice("RGL 6s 5CP Match Half 1", 65),
+         Choice("RGL 6s 5CP Match Half 2", 66),
+         Choice("RGL 6s 5CP Match Pro", 109),
+         Choice("RGL 6s 5CP Scrim", 69),
+         Choice("RGL 6s KOTH", 67),
+         Choice("RGL 6s KOTH BO5", 68),
+         Choice("RGL 6s KOTH Pro", 110),
+         Choice("RGL 6s KOTH Scrim", 113),
+         Choice("RGL 7s KOTH", 33),
+         Choice("RGL 7s KOTH BO5", 32),
+         Choice("RGL 7s Stopwatch", 34),
+         Choice("RGL HL KOTH", 53),
+         Choice("RGL HL KOTH BO5", 54),
+         Choice("RGL HL Stopwatch", 55),
+         Choice("RGL NR6s 5CP Match Half 1", 86),
+         Choice("RGL NR6s 5CP Match Half 2", 87),
+         Choice("RGL NR6s 5CP Scrim", 88),
+         Choice("RGL NR6s KOTH", 91),
+         Choice("RGL NR6s KOTH BO5", 92),
+         Choice("RGL NR6s Stopwatch", 93)]
         int? startingConfigId = null,
-        bool? enablePlugins = null,
-        bool? enableDemos = null)
+        [Summary("EnablePlugins", "This is where you can Enable/Disable plugins, such as SOAPs.")] bool? enablePlugins = null,
+        [Summary("EnableDemos", "This is where you can Enable/Disable STV demo uploading to demos.tf.")] bool? enableDemos = null,
+        [Summary("AutoEnd", "This is where you can change the Enable/Disable the server from ending when the server empties out.")] bool? autoEnd = null)
     {
         await DeferAsync(); 
         try
@@ -227,7 +233,8 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                 map, 
                 startingConfigId,
                 enablePlugins,
-                enableDemos);
+                enableDemos,
+                autoEnd);
             var reservation = updatedReservation["reservation"];
             var server = reservation["server"];
 
@@ -247,6 +254,7 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                 .AddField("Starting Map", reservation["first_map"]?.ToString() ?? "N/A", true)
                 .AddField("Plugins Enabled", reservation["enable_plugins"]?.ToString() ?? "N/A", true)
                 .AddField("Demos Enabled", reservation["enable_demos_tf"]?.ToString() ?? "N/A", true)
+                .AddField("Auto End Enabled", reservation["auto_end"]?.ToString() ?? "N/A", true)
                 .AddField("Selected Config", configName, true)
                 .WithColor(Color.Green)
                 .Build();
@@ -279,6 +287,7 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
             .AddField("Starting Config ID", "This is where you define the starting config. For your convenience a list is provided with most RGL Configs, which you can just click.", true)
             .AddField("Enable Plugins", "A true/false option to enable server plugins, such as SOAPs", true)
             .AddField("Enable Demos", "A true/false option to enable auto uploading STV Demo to Demos.tf.", true)
+            .AddField("Auto End Enabled", "A true/false option to enable auto ending the reservation if the server is empty.", true)
             .AddField("Reservation ID", "This will be provided to you when you /reserve_server, you will need this if you need to /update_reservation", true)
             .AddField("Command: /find_servers", "Fill out the required fields and it will return a list of available servers and their Server IDs.", true)
             .AddField("Command: /reserve_server", "Fill out the required fields and it will reserve a server. Most info will be publicly displayed, rcon info will be sent to the user who ran the command.", true)

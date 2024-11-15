@@ -27,7 +27,7 @@ namespace SfsTF2ServeMeBot.Services
         // Existing method for creating reservations
         public async Task<JObject> CreateReservationAsync(string startDate, string startTime, string endDate,
             string endTime, string passwordString, string stvPasswordString, string rconString, string mapString, 
-            int serverId, int? serverConfigId, bool enablePlugins, bool enableDemos)
+            int serverId, int? serverConfigId, bool enablePlugins, bool enableDemos, bool autoEnd)
         {
             var startsAt = $"{startDate}T{startTime}:00.000-05:00";
             var endsAt = $"{endDate}T{endTime}:00.000-05:00";
@@ -45,7 +45,8 @@ namespace SfsTF2ServeMeBot.Services
                     server_id = serverId,
                     server_config_id = serverConfigId,
                     enable_plugins = enablePlugins,
-                    enable_demos_tf = enableDemos
+                    enable_demos_tf = enableDemos,
+                    auto_end = autoEnd
                 }
             };
 
@@ -102,7 +103,7 @@ namespace SfsTF2ServeMeBot.Services
 
         public async Task<JObject> UpdateReservationAsync(int reservationId, int? serverId = null, string? startDate = null, string? startTime = null,
             string? endDate = null, string? endTime = null, string? password = null, string? stvPassword = null, string? map = null,
-            int? serverConfigId = null, bool? enablePlugins = null, bool? enableDemos = null)
+            int? serverConfigId = null, bool? enablePlugins = null, bool? enableDemos = null, bool? autoEnd = null)
         { 
             var reservationDetailsResponse = await _httpClient.GetAsync($"https://na.serveme.tf/api/reservations/{reservationId}?api_key={_apiKey}");
             if (!reservationDetailsResponse.IsSuccessStatusCode)
@@ -131,6 +132,7 @@ namespace SfsTF2ServeMeBot.Services
             if (serverConfigId.HasValue) reservationUpdate.server_config_id = serverConfigId;
             if (enablePlugins.HasValue) reservationUpdate.enable_plugins = enablePlugins.Value;
             if (enableDemos.HasValue) reservationUpdate.enable_demos_tf = enableDemos.Value;
+            if (autoEnd.HasValue) reservationUpdate.auto_end = autoEnd.Value;
 
             var requestBody = new { reservation = reservationUpdate };
             var jsonContent = JsonConvert.SerializeObject(requestBody);

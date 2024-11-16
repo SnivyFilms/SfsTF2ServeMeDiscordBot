@@ -22,8 +22,10 @@ Command | Command Description
 
 > [!IMPORTANT]
 > As of now, all time parameters are in US East.
+> 
 > You're unable to update the reservation to change the remote console (RCON) password
 
 > [!NOTE]
 > When a server is reserved, most of the info will be posted into the channel that it was ran in.
+> 
 > The info for remote console (RCON) will be sent to the dms of the user that ran it.

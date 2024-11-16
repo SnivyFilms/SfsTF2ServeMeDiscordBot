@@ -2,7 +2,7 @@
 
 This is a discord bot, coded in C# that is designed to use [na.serveme.tf](https://na.serveme.tf/) api to find servers, reserve servers, and update pre-existing reservations ready to go out of the box.
 
-> [!NOTE]
+> [!WARNING]
 > You will need to setup an appsettings.json file for a discord bot token and a na.serveme.tf api key in the directory where the console program is built, such as \bin\[debug/release]\net8.0
 > ```
 > {

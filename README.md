@@ -12,6 +12,7 @@ This is a discord bot, coded in C# that is designed to use [na.serveme.tf](https
 > ```
 
 ### Command List
+Command | Command Description
 :---: | :------
 /find_server | Finds a server for a reservation.
 /reserve_server | Reserves a server.

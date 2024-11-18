@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿/*
+using System.IO;
 using Newtonsoft.Json;
 using Discord;
 using Discord.Interactions;
@@ -96,3 +97,4 @@ namespace SfsTF2ServeMeBot.Commands
         public bool AccountForDaylightSavings { get; set; }
     }
 }
+*/

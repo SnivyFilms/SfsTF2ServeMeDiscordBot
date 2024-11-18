@@ -57,12 +57,19 @@ public class Bot
             Console.WriteLine($"Loaded module: {module.Name}");
         }
         
-        ulong testGuildId = 335903736142626827;
-        await _commands.RegisterCommandsToGuildAsync(testGuildId);
+        //ulong testGuildId = 654407422861115426;
+        //await _commands.RegisterCommandsToGuildAsync(testGuildId);
         //await _commands.AddModulesAsync(typeof(Bot).Assembly, _services); // Register all command modules
-        //await _commands.RegisterCommandsGloballyAsync(); // Sync commands globally for all servers
-
-        Console.WriteLine("Commands synchronized with Discord.");
+        try
+        {
+            await _commands.RegisterCommandsGloballyAsync();
+            Console.WriteLine("Global commands registered successfully.");
+            //await _commands.RegisterCommandsToGuildAsync(testGuildId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to register global commands: {ex.Message}");
+        }
     }
 
     private Task LogAsync(LogMessage log)

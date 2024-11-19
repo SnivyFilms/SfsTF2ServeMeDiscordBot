@@ -103,15 +103,29 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
             await FollowupAsync(embed: embed);
 
             var dmChannel = await Context.User.CreateDMChannelAsync();
-            await dmChannel.SendMessageAsync(
-                $"**RCON Information**:\nRCON Address: {server["ip_and_port"]}\nRCON Password: {reservation["rcon"]}");
+            var dmEmbed = new EmbedBuilder()
+                .WithTitle("RCON Info")
+                .AddField("RCON Address", reservation["rcon_address"]?.ToString() ?? "N/A", true)
+                .AddField("RCN Password", reservation["rcn_password"]?.ToString() ?? "N/A", true)
+                .WithColor(Color.Green)
+                .WithFooter(EmbedFooterModule.Footer)
+                .Build();
+            await dmChannel.SendMessageAsync(embed: dmEmbed);
 
         }
         catch (HttpRequestException ex)
         {
             // Handle any errors by informing the user
-            await FollowupAsync("There was an error reserving the server. Please try again later.");
-            Console.WriteLine($"Error creating reservation: {ex.Message}");
+            var embed = new EmbedBuilder()
+                .WithTitle("Server Reservation Failure")
+                .AddField("Reason:", "Do you have the correct region selected?", true)
+                .AddField("Error Code", ex.Message, true)
+                .WithColor(Color.Red)
+                .WithFooter(EmbedFooterModule.Footer)
+                .Build();
+            await FollowupAsync(embed: embed);
+            //await FollowupAsync("There was an error reserving the server. Please try again later.");
+            //Console.WriteLine($"Error creating reservation: {ex.Message}");
         }
     }
 
@@ -142,7 +156,13 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
         
             if (servers == null || servers.Count == 0)
             {
-                await FollowupAsync("No servers found matching the criteria.");
+                var noServerEmbed = new EmbedBuilder()
+                    .WithTitle("No servers found matching the criteria")
+                    .AddField("Unavailable Servers", "No servers found matching the criteria", true)
+                    .WithColor(Color.Red)
+                    .WithFooter(EmbedFooterModule.Footer)
+                    .Build();
+                await FollowupAsync(embed: noServerEmbed);
                 return;
             }
 
@@ -184,14 +204,20 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
         }
         catch (HttpRequestException ex)
         {
-            await FollowupAsync("Error finding servers. Try again later.");
-            Console.WriteLine($"Error fetching server data: {ex.Message}");
+            var embed = new EmbedBuilder()
+                .WithTitle("Server Search Failure")
+                .AddField("Reason:", "Do you have the correct region selected?", true)
+                .AddField("Error Code", ex.Message, true)
+                .WithColor(Color.Red)
+                .WithFooter(EmbedFooterModule.Footer)
+                .Build();
+            await FollowupAsync(embed: embed);
         }
-        catch (Exception ex)
+        /*catch (Exception ex)
         {
             await FollowupAsync("An unexpected error occurred.");
             Console.WriteLine($"Unexpected error: {ex.Message}");
-        }
+        }*/
     }
 
     [SlashCommand("update_reservation", "Allows you to update a preexisting reservation")]
@@ -285,9 +311,14 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
         }
         catch (HttpRequestException ex)
         {
-            // Notify the user of the error
-            await FollowupAsync("There was an error updating the server reservation. Please try again later.");
-            Console.WriteLine($"Error updating reservation: {ex.Message}");
+            var embed = new EmbedBuilder()
+                .WithTitle("Server Update Reservation Failure")
+                .AddField("Reason:", "Is the correct region selected? Is the fields you wanted to update properly set", true)
+                .AddField("Error Code", ex.Message, true)
+                .WithColor(Color.Red)
+                .WithFooter(EmbedFooterModule.Footer)
+                .Build();
+            await FollowupAsync(embed: embed);
         }
     }
     private EmbedBuilder BuildServerEmbed(List<JToken> servers, int pageIndex)

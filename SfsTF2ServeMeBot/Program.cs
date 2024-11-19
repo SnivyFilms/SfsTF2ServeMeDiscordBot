@@ -11,16 +11,13 @@ public class Program
     public static Version botVersion = new Version(1, 1,1);
     public static async Task Main(string[] args)
     {
-        // Build the configuration
         var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())  // Sets base directory to the project's root
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)  // Load appsettings.json
-            //.AddEnvironmentVariables()  // Optional: add environment variables for overriding
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .Build();
-
-        // Set up services and dependency injection
+        
         var services = new ServiceCollection()
-            .AddSingleton<IConfiguration>(configuration)  // Add configuration to the services collection
+            .AddSingleton<IConfiguration>(configuration)
             .AddSingleton<DiscordSocketClient>()
             .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
             .AddSingleton<ServemeService>()

@@ -1,13 +1,16 @@
 # SFS TF2 Serveme Discord Bot.
 
-This is a discord bot, coded in C# that is designed to use [na.serveme.tf](https://na.serveme.tf/) api to find servers, reserve servers, and update pre-existing reservations ready to go out of the box.
+This is a discord bot, coded in C# that is designed to use [na.serveme.tf](https://na.serveme.tf/), [serveme.tf](https://serveme.tf/), [au.serveme.tf](https://au.serveme.tf/), and [sea.serveme.tf](https://sea.serveme.tf/) apis to find servers, reserve servers, and update pre-existing reservations ready to go out of the box.
 
 > [!WARNING]
-> You will need to setup an appsettings.json file for a discord bot token and a na.serveme.tf api key in the directory where the console program is built, such as \bin\[debug/release]\net8.0
+> You will need to setup an appsettings.json file for a discord bot token and serveme api keys in the directory where the console program is built, such as \bin\[debug/release]\net8.0
 > ```
 > {
 >   "DiscordToken" : "Your Discord Bot Key"
->   "ServemeApiKey" : "Your na.serveme.tf API Key"
+>   "ServemeApiKeyNA": "Your NA Serveme API Key"
+>   "ServemeApiKeyEU": "Your EU Serveme API Key"
+>   "ServemeApiKeyAU": "Your AU Serveme API Key"
+>   "ServemeApiKeySEA": "Your SEA Serveme API Key"
 > }
 > ```
 
@@ -21,7 +24,7 @@ Command | Command Description
 /ping | Gets the latency of the bot
 
 > [!IMPORTANT]
-> As of now, all time parameters are in US East.
+> Time parameters is determined by region. NA: -5, EU: +1, AU: +11, SEA: +8
 > 
 > You're unable to update the reservation to change the remote console (RCON) password
 

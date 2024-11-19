@@ -25,10 +25,11 @@ public class MiscCommands : InteractionModuleBase<SocketInteractionContext>
         await DeferAsync();
         var embed = new EmbedBuilder()
             .WithTitle("Help")
+            .AddField("Region", "Determines the region of serveme, NA/EU/AU/SEA. This determines the region timescale offset. NA: -5, EU: +1, AU: -11, SEA: +8")
             .AddField("Start Date", "Provide the date for when the reservation should start. Provided in the format YYYY-MM-DD. Example: 2024-04-09 for April 9th, 2024.", true)
-            .AddField("Start Time", "Provide the time for when the reservation should start. Provided in a 24 hour clock style. Example: 21:30 for 9:30 PM. In US Eastern", true)
+            .AddField("Start Time", "Provide the time for when the reservation should start. Provided in a 24 hour clock style. Example: 21:30 for 9:30 PM.", true)
             .AddField("End Date", "Provide the date for when the reservation should end. Provided in the format YYYY-MM-DD. Example: 2024-06-09 for June 9th, 2024.", true)
-            .AddField("End Time", "Provide the time for when the reservation should end. Provided in a 24 hour clock style. Example: 23:30 for 11:30 PM. In US Eastern", true)
+            .AddField("End Time", "Provide the time for when the reservation should end. Provided in a 24 hour clock style. Example: 23:30 for 11:30 PM.", true)
             .AddField("Password", "This is the password for the server for both regular and SDR Connects. The entire US Keyboard is supported for inputs.", true)
             .AddField("STV Password", "This is the password for STV. The entire US Keyboard is supported for inputs.", true)
             .AddField("Rcon", "This is the password for remote console. The entire US Keyboard is supported for inputs. This will be sent to the user who runs the command. This CANNOT be changed without reserving a new server.", true)

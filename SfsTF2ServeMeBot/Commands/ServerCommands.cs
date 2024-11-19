@@ -24,9 +24,9 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
          Choice("Australia", "AU")]
         string region,
         [Summary("StartDate", "The start date in YYYY-MM-DD. I.E. 2024-04-20 for April 20th, 2024")] string startDate,
-        [Summary("StartTime", "The start time in a 24 hour clock format HH:MM. I.E. 21:30 for 9:30 PM. Time's in US East")] string startTime,
+        [Summary("StartTime", "The start time in a 24 hour clock format HH:MM. I.E. 21:30 for 9:30 PM.")] string startTime,
         [Summary("EndDate", "The start date in YYYY-MM-DD. I.E. 2024-06-09 for June 9th, 2024")] string endDate,
-        [Summary("EndTime", "The start time in a 24 hour clock format HH:MM. I.E. 23:30 for 11:30 PM. Time's in US East")] string endTime,
+        [Summary("EndTime", "The start time in a 24 hour clock format HH:MM. I.E. 23:30 for 11:30 PM.")] string endTime,
         [Summary("ServerPassword", "This is the password that people will use to connect to the server.")] string password,
         [Summary("StvPassword", "This is the password that people will use to connect to the STV of server.")] string stvPassword,
         [Summary("RconPassword", "Rcon Password, This cannot be changed after reserving the server. This will be DMed to you.")] string rcon,
@@ -124,9 +124,9 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
          Choice("Australia", "AU")]
         string region,
         [Summary("StartDate", "The start date in YYYY-MM-DD. I.E. 2024-04-20 for April 20th, 2024")] string startDate,
-        [Summary("StartTime", "The start time in a 24 hour clock format HH:MM. I.E. 21:30 for 9:30 PM. Time's in US East")] string startTime,
+        [Summary("StartTime", "The start time in a 24 hour clock format HH:MM. I.E. 21:30 for 9:30 PM.")] string startTime,
         [Summary("EndDate", "The start date in YYYY-MM-DD. I.E. 2024-06-09 for June 9th, 2024")] string endDate,
-        [Summary("EndTime", "The start time in a 24 hour clock format HH:MM. I.E. 23:30 for 11:30 PM. Time's in US East")] string endTime)
+        [Summary("EndTime", "The start time in a 24 hour clock format HH:MM. I.E. 23:30 for 11:30 PM.")] string endTime)
     {
         await DeferAsync();
 

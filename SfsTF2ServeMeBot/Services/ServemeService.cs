@@ -9,26 +9,29 @@ namespace SfsTF2ServeMeBot.Services
     public class ServemeService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _apiKey;
+        private readonly string _apiKeyNA;
+        private readonly string _apiKeyEU;
+        private readonly string _apiKeyAU;
+        private readonly string _apiKeySEA;
 
         public ServemeService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
-            _apiKey = configuration["ServemeApiKey"];  // Retrieve the API key
-            
-            _httpClient.Timeout = TimeSpan.FromSeconds(10);
-
-            // Add the API key to default headers if required
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Token token={_apiKey}");
+            _apiKeyNA = configuration["ServemeApiKeyNA"];
+            _apiKeyEU = configuration["ServemeApiKeyEU"];
+            _apiKeyAU = configuration["ServemeApiKeyAU"];
+            _apiKeySEA = configuration["ServemeApiKeySEA"];
+            //_httpClient.Timeout = TimeSpan.FromSeconds(10);
         }
 
         // Existing method for creating reservations
-        public async Task<JObject> CreateReservationAsync(string startDate, string startTime, string endDate,
+        public async Task<JObject> CreateReservationAsync(string region, string startDate, string startTime, string endDate,
             string endTime, string passwordString, string stvPasswordString, string rconString, string mapString, 
             int serverId, int? serverConfigId, bool enablePlugins, bool enableDemos, bool autoEnd)
         {
-            var startsAt = $"{startDate}T{startTime}:00.000-05:00";
-            var endsAt = $"{endDate}T{endTime}:00.000-05:00";
+            string utcOffset = GetRegionTimeOffset(region);
+            var startsAt = $"{startDate}T{startTime}:00.000{utcOffset}";
+            var endsAt = $"{endDate}T{endTime}:00.000{utcOffset}";
 
             var requestBody = new
             {
@@ -47,31 +50,45 @@ namespace SfsTF2ServeMeBot.Services
                     auto_end = autoEnd
                 }
             };
-
-            var response = await _httpClient.PostAsJsonAsync($"https://na.serveme.tf/api/reservations?api_key={_apiKey}", requestBody);
+            HttpResponseMessage response;
+            switch (region)
+            {
+                case "NA":
+                    response = await _httpClient.PostAsJsonAsync($"https://na.serveme.tf/api/reservations?api_key={_apiKeyNA}", requestBody);
+                    break;
+                case "EU":
+                    response = await _httpClient.PostAsJsonAsync($"https://serveme.tf/api/reservations?api_key={_apiKeyNA}", requestBody);
+                    break;
+                case "AU":
+                    response = await _httpClient.PostAsJsonAsync($"https://au.serveme.tf/api/reservations?api_key={_apiKeyNA}", requestBody);
+                    break;
+                case "SEA":
+                    response = await _httpClient.PostAsJsonAsync($"https://sea.serveme.tf/api/reservations?api_key={_apiKeyNA}", requestBody);
+                    break;
+                default:
+                    response = await _httpClient.PostAsJsonAsync($"https://na.serveme.tf/api/reservations?api_key={_apiKeyNA}", requestBody);
+                    break;
+            }
             var content = await response.Content.ReadAsStringAsync();
-            
-            //Console.WriteLine($"Raw JSON Response: {content}");  // Log raw response for debugging
-
-            // Step 2: Attempt to parse the JSON manually if necessary
             JObject reservationResponse;
             try
             {
-                reservationResponse = JObject.Parse(content); // Attempt to parse into JObject
+                reservationResponse = JObject.Parse(content);
             }
             catch (JsonReaderException ex)
             {
                 Console.WriteLine($"JSON Parsing Error: {ex.Message}");
-                throw;  // Rethrow to handle in calling method
+                throw;
             }
 
             return reservationResponse;
         }
 
-        public async Task<JObject> FindServersAsync(string startDate, string startTime, string endDate, string endTime)
+        public async Task<JObject> FindServersAsync(string region, string startDate, string startTime, string endDate, string endTime)
         {
-            var startsAt = $"{startDate}T{startTime}:00.000-05:00";
-            var endsAt = $"{endDate}T{endTime}:00.000-05:00";
+            string utcOffset = GetRegionTimeOffset(region);
+            var startsAt = $"{startDate}T{startTime}:00.000{utcOffset}";
+            var endsAt = $"{endDate}T{endTime}:00.000{utcOffset}";
 
             var requestBody = new
             {
@@ -82,7 +99,25 @@ namespace SfsTF2ServeMeBot.Services
                 }
             };
 
-            var response = await _httpClient.PostAsJsonAsync($"https://na.serveme.tf/api/reservations/find_servers?api_key={_apiKey}", requestBody);
+            HttpResponseMessage response;
+            switch (region)
+            {
+                case "NA":
+                    response = await _httpClient.PostAsJsonAsync($"https://na.serveme.tf/api/reservations/find_servers?api_key={_apiKeyNA}", requestBody);
+                    break;
+                case "EU":
+                    response = await _httpClient.PostAsJsonAsync($"https://serveme.tf/api/reservations/find_servers?api_key={_apiKeyEU}", requestBody);
+                    break;
+                case "AU":
+                    response = await _httpClient.PostAsJsonAsync($"https://au.serveme.tf/api/reservations/find_servers?api_key={_apiKeyAU}", requestBody);
+                    break;
+                case "SEA":
+                    response = await _httpClient.PostAsJsonAsync($"https://sea.serveme.tf/api/reservations/find_servers?api_key={_apiKeySEA}", requestBody);
+                    break;
+                default:
+                    response = await _httpClient.PostAsJsonAsync($"https://na.serveme.tf/api/reservations/find_servers?api_key={_apiKeyNA}", requestBody);
+                    break;
+            }
 
             var content = await response.Content.ReadAsStringAsync();
             JObject availableServers;
@@ -99,11 +134,29 @@ namespace SfsTF2ServeMeBot.Services
             return availableServers;
         }
 
-        public async Task<JObject> UpdateReservationAsync(int reservationId, int? serverId = null, string? startDate = null, string? startTime = null,
+        public async Task<JObject> UpdateReservationAsync(string region, int reservationId, int? serverId = null, string? startDate = null, string? startTime = null,
             string? endDate = null, string? endTime = null, string? password = null, string? stvPassword = null, string? map = null,
             int? serverConfigId = null, bool? enablePlugins = null, bool? enableDemos = null, bool? autoEnd = null)
-        { 
-            var reservationDetailsResponse = await _httpClient.GetAsync($"https://na.serveme.tf/api/reservations/{reservationId}?api_key={_apiKey}");
+        {
+            HttpResponseMessage reservationDetailsResponse;
+            switch (region)
+            {
+                case "NA":
+                    reservationDetailsResponse = await _httpClient.GetAsync($"https://na.serveme.tf/api/reservations/{reservationId}?api_key={_apiKeyNA}");
+                    break;
+                case "EU":
+                    reservationDetailsResponse = await _httpClient.GetAsync($"https://serveme.tf/api/reservations/{reservationId}?api_key={_apiKeyEU}");
+                    break;
+                case "AU":
+                    reservationDetailsResponse = await _httpClient.GetAsync($"https://au.serveme.tf/api/reservations/{reservationId}?api_key={_apiKeyAU}");
+                    break;
+                case "SEA":
+                    reservationDetailsResponse = await _httpClient.GetAsync($"https://sea.serveme.tf/api/reservations/{reservationId}?api_key={_apiKeySEA}");
+                    break;
+                default:
+                    reservationDetailsResponse = await _httpClient.GetAsync($"https://na.serveme.tf/api/reservations/{reservationId}?api_key={_apiKeyNA}");
+                    break;
+            }
             if (!reservationDetailsResponse.IsSuccessStatusCode)
             {
                 throw new HttpRequestException($"Failed to retrieve reservation details. Status: {(int)reservationDetailsResponse.StatusCode}");
@@ -121,9 +174,17 @@ namespace SfsTF2ServeMeBot.Services
 
             if (serverId.HasValue) reservationUpdate.server_id = serverId;
             if (!string.IsNullOrEmpty(startDate) && !string.IsNullOrEmpty(startTime))
-                reservationUpdate.starts_at = $"{startDate}T{startTime}:00.000-05:00";
+            {
+                string utcOffset = GetRegionTimeOffset(region);
+                reservationUpdate.starts_at = $"{startDate}T{startTime}:00.000{utcOffset}";
+            }
+
             if (!string.IsNullOrEmpty(endDate) && !string.IsNullOrEmpty(endTime))
-                reservationUpdate.ends_at = $"{endDate}T{endTime}:00.000-05:00";
+            {
+                string utcOffset = GetRegionTimeOffset(region);
+                reservationUpdate.ends_at = $"{endDate}T{endTime}:00.000{utcOffset}";
+            }
+
             if (!string.IsNullOrEmpty(password)) reservationUpdate.password = password;
             if (!string.IsNullOrEmpty(stvPassword)) reservationUpdate.tv_password = stvPassword;
             if (!string.IsNullOrEmpty(map)) reservationUpdate.first_map = map;
@@ -160,8 +221,25 @@ namespace SfsTF2ServeMeBot.Services
                 Console.WriteLine($"JSON Parsing Error: {ex.Message}");
                 throw;
             }
-    
-            var updatedReservationResponse = await _httpClient.GetAsync($"https://na.serveme.tf/api/reservations/{reservationId}?api_key={_apiKey}");
+            HttpResponseMessage updatedReservationResponse;
+            switch (region)
+            {
+                case "NA":
+                    updatedReservationResponse = await _httpClient.GetAsync($"https://na.serveme.tf/api/reservations/{reservationId}?api_key={_apiKeyNA}");
+                    break;
+                case "EU":
+                    updatedReservationResponse = await _httpClient.GetAsync($"https://serveme.tf/api/reservations/{reservationId}?api_key={_apiKeyEU}");
+                    break;
+                case "AU":
+                    updatedReservationResponse = await _httpClient.GetAsync($"https://au.serveme.tf/api/reservations/{reservationId}?api_key={_apiKeyAU}");
+                    break;
+                case "SEA":
+                    updatedReservationResponse = await _httpClient.GetAsync($"https://sea.serveme.tf/api/reservations/{reservationId}?api_key={_apiKeySEA}");
+                    break;
+                default:
+                    updatedReservationResponse = await _httpClient.GetAsync($"https://na.serveme.tf/api/reservations/{reservationId}?api_key={_apiKeyNA}");
+                    break;
+            }
             if (!updatedReservationResponse.IsSuccessStatusCode)
             {
                 throw new HttpRequestException($"Failed to retrieve updated reservation details. Status: {(int)updatedReservationResponse.StatusCode}");
@@ -180,14 +258,29 @@ namespace SfsTF2ServeMeBot.Services
             }
 
             return updatedReservation;
-}
-
-        public async Task<JObject> GetTestReservationAsync()
+        }
+        private string GetRegionTimeOffset(String region)
         {
-            var response = await _httpClient.GetAsync($"https://na.serveme.tf/api/reservations/new?api_key={_apiKey}");
-            response.EnsureSuccessStatusCode();
-            var prefilledReservation = await response.Content.ReadFromJsonAsync<JObject>();
-            return prefilledReservation;
+            string utcOffset = "";
+            switch (region)
+            {
+                case "NA":
+                    utcOffset = "-05:00";
+                    break;
+                case "EU":
+                    utcOffset = "+01:00";
+                    break;
+                case "AU":
+                    utcOffset = "+11:00";
+                    break;
+                case "SEA":
+                    utcOffset = "+08:00";
+                    break;
+                default:
+                    utcOffset = "-05:00";
+                    break;
+            }
+            return utcOffset;
         }
     }
 }

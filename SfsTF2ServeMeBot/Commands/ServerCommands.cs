@@ -17,6 +17,12 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
 
     [SlashCommand("reserve_server", "Reserve a server")]
     public async Task ReserveServer(
+        [Summary("Region", "Determines which region is used, NA, EU, SEA, AU"),
+         Choice("North America", "NA"),
+         Choice("Europe", "EU"),
+         Choice("South East Asia", "SEA"),
+         Choice("Australia", "AU")]
+        string region,
         [Summary("StartDate", "The start date in YYYY-MM-DD. I.E. 2024-04-20 for April 20th, 2024")] string startDate,
         [Summary("StartTime", "The start time in a 24 hour clock format HH:MM. I.E. 21:30 for 9:30 PM. Time's in US East")] string startTime,
         [Summary("EndDate", "The start date in YYYY-MM-DD. I.E. 2024-06-09 for June 9th, 2024")] string endDate,
@@ -58,6 +64,7 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
         try
         {
             var reservationResponse = await _servemeService.CreateReservationAsync(
+                region,
                 startDate, 
                 startTime, 
                 endDate, 
@@ -110,6 +117,12 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
 
     [SlashCommand("find_servers", "Find available TF2 servers")]
     public async Task FindServers(
+        [Summary("Region", "Determines which region is used, NA, EU, SEA, AU"),
+         Choice("North America", "NA"),
+         Choice("Europe", "EU"),
+         Choice("South East Asia", "SEA"),
+         Choice("Australia", "AU")]
+        string region,
         [Summary("StartDate", "The start date in YYYY-MM-DD. I.E. 2024-04-20 for April 20th, 2024")] string startDate,
         [Summary("StartTime", "The start time in a 24 hour clock format HH:MM. I.E. 21:30 for 9:30 PM. Time's in US East")] string startTime,
         [Summary("EndDate", "The start date in YYYY-MM-DD. I.E. 2024-06-09 for June 9th, 2024")] string endDate,
@@ -120,6 +133,7 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
         try
         {
             var availableServers = await _servemeService.FindServersAsync(
+                region,
                 startDate, 
                 startTime, 
                 endDate, 
@@ -182,6 +196,12 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
 
     [SlashCommand("update_reservation", "Allows you to update a preexisting reservation")]
     public async Task UpdateReservation(
+        [Summary("Region", "Determines which region is used, NA, EU, SEA, AU"),
+         Choice("North America", "NA"),
+         Choice("Europe", "EU"),
+         Choice("South East Asia", "SEA"),
+         Choice("Australia", "AU")]
+        string region,
         [Summary("ReservationId", "You will need this to change anything with the reservation.")] int reservationId,
         [Summary("ServerId", "This is the ServerId of the server you want to change to, use /find_server to get the ServerId.")]int? serverId = null,
         [Summary("StartDate", "This is where you can change the start date in YYYY-MM-DD.")] string? startDate = null,
@@ -222,6 +242,7 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
         try
         {
             var updatedReservation = await _servemeService.UpdateReservationAsync(
+                region,
                 reservationId, 
                 serverId,
                 startDate, 
@@ -315,40 +336,3 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
         { 93, "RGL NR6s Stopwatch" }
     };
 }
-/*
-    [SlashCommand("test_get_reservation", "Test GET reservation")]
-    public async Task TestGetReservation()
-    {
-        // Acknowledge the interaction
-        await DeferAsync();
-
-        try
-        {
-            // Get prefilled reservation
-            var prefilledReservation = await _servemeService.GetTestReservationAsync();
-
-            // Extract relevant details from the prefilled reservation response
-            var reservationDetails = prefilledReservation["reservation"];
-
-            var embed = new EmbedBuilder()
-                .WithTitle("Prefilled Reservation Details")
-                .WithColor(Color.Green)
-                .AddField("Reservation ID", reservationDetails["id"]?.ToString() ?? "N/A", true)
-                .AddField("Start Time", reservationDetails["starts_at"]?.ToString() ?? "N/A", true)
-                .AddField("End Time", reservationDetails["ends_at"]?.ToString() ?? "N/A", true)
-                .AddField("Server ID", reservationDetails["server_id"]?.ToString() ?? "N/A", true)
-                .AddField("Map", reservationDetails["first_map"]?.ToString() ?? "N/A", true)
-                .AddField("RCON Password", reservationDetails["rcon"]?.ToString() ?? "N/A", false)
-                .AddField("TV Password", reservationDetails["tv_password"]?.ToString() ?? "N/A", false);
-
-            // Send the response embed
-            await FollowupAsync(embed: embed.Build());
-        }
-        catch (HttpRequestException ex)
-        {
-            // If there is an error, inform the user
-            await FollowupAsync("There was an error retrieving the prefilled reservation. Please try again later.");
-            Console.WriteLine($"Error fetching prefilled reservation: {ex.Message}");
-        }
-    }
-}*/

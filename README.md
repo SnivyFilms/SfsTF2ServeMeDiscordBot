@@ -13,6 +13,8 @@ This is a discord bot, coded in C# that is designed to use [na.serveme.tf](https
 >   "ServemeApiKeySEA": "Your SEA Serveme API Key"
 > }
 > ```
+>
+> You only need the API Key dependent on the region you want to use the bot in, so as an example if you only plan on using it in the North American area, you only need the North American API key, however an error will be thrown if users try any other region
 
 ### Command List
 Command | Command Description

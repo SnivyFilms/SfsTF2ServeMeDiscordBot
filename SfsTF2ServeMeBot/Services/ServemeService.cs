@@ -50,8 +50,8 @@ namespace SfsTF2ServeMeBot.Services
                     auto_end = autoEnd
                 }
             };
-            HttpResponseMessage response;
-            switch (region)
+            //var response;
+            /*switch (region)
             {
                 case "NA":
                     response = await _httpClient.PostAsJsonAsync($"https://na.serveme.tf/api/reservations?api_key={_apiKeyNA}", requestBody);
@@ -68,7 +68,8 @@ namespace SfsTF2ServeMeBot.Services
                 default:
                     response = await _httpClient.PostAsJsonAsync($"https://na.serveme.tf/api/reservations?api_key={_apiKeyNA}", requestBody);
                     break;
-            }
+            }*/
+            var response = await _httpClient.PostAsJsonAsync($"https://na.serveme.tf/api/reservations?api_key={_apiKeyNA}", requestBody);
             var content = await response.Content.ReadAsStringAsync();
             JObject reservationResponse;
             try
@@ -99,7 +100,7 @@ namespace SfsTF2ServeMeBot.Services
                 }
             };
 
-            HttpResponseMessage response;
+            /*HttpResponseMessage response;
             switch (region)
             {
                 case "NA":
@@ -117,8 +118,8 @@ namespace SfsTF2ServeMeBot.Services
                 default:
                     response = await _httpClient.PostAsJsonAsync($"https://na.serveme.tf/api/reservations/find_servers?api_key={_apiKeyNA}", requestBody);
                     break;
-            }
-
+            }*/
+            var response = await _httpClient.PostAsJsonAsync($"https://na.serveme.tf/api/reservations/find_servers?api_key={_apiKeyNA}", requestBody);
             var content = await response.Content.ReadAsStringAsync();
             JObject availableServers;
             try
@@ -138,7 +139,7 @@ namespace SfsTF2ServeMeBot.Services
             string? endDate = null, string? endTime = null, string? password = null, string? stvPassword = null, string? map = null,
             int? serverConfigId = null, bool? enablePlugins = null, bool? enableDemos = null, bool? autoEnd = null)
         {
-            HttpResponseMessage reservationDetailsResponse;
+            /*HttpResponseMessage reservationDetailsResponse;
             switch (region)
             {
                 case "NA":
@@ -156,7 +157,8 @@ namespace SfsTF2ServeMeBot.Services
                 default:
                     reservationDetailsResponse = await _httpClient.GetAsync($"https://na.serveme.tf/api/reservations/{reservationId}?api_key={_apiKeyNA}");
                     break;
-            }
+            }*/
+            var reservationDetailsResponse = await _httpClient.GetAsync($"https://na.serveme.tf/api/reservations/{reservationId}?api_key={_apiKeyNA}");
             if (!reservationDetailsResponse.IsSuccessStatusCode)
             {
                 throw new HttpRequestException($"Failed to retrieve reservation details. Status: {(int)reservationDetailsResponse.StatusCode}");
@@ -221,7 +223,7 @@ namespace SfsTF2ServeMeBot.Services
                 Console.WriteLine($"JSON Parsing Error: {ex.Message}");
                 throw;
             }
-            HttpResponseMessage updatedReservationResponse;
+            /*HttpResponseMessage updatedReservationResponse;
             switch (region)
             {
                 case "NA":
@@ -239,7 +241,8 @@ namespace SfsTF2ServeMeBot.Services
                 default:
                     updatedReservationResponse = await _httpClient.GetAsync($"https://na.serveme.tf/api/reservations/{reservationId}?api_key={_apiKeyNA}");
                     break;
-            }
+            }*/
+            var updatedReservationResponse = await _httpClient.GetAsync($"https://na.serveme.tf/api/reservations/{reservationId}?api_key={_apiKeyNA}");
             if (!updatedReservationResponse.IsSuccessStatusCode)
             {
                 throw new HttpRequestException($"Failed to retrieve updated reservation details. Status: {(int)updatedReservationResponse.StatusCode}");
@@ -284,20 +287,3 @@ namespace SfsTF2ServeMeBot.Services
         }
     }
 }
-
-/*
-
-        // New method to handle the "Test GET Reservation" request
-        public async Task<JObject> GetTestReservationAsync()
-        {
-            var response = await _httpClient.GetAsync($"https://na.serveme.tf/api/reservations/new?api_key={_apiKey}");
-            var content = await response.Content.ReadAsStringAsync();  // Read response content
-            Console.WriteLine(content);  // Debugging the raw response
-
-            var prefilledReservation = JsonConvert.DeserializeObject<ServerInfo>(content);
-            //response.EnsureSuccessStatusCode();
-            //var prefilledReservation = await response.Content.ReadFromJsonAsync<JObject>();
-            return new JObject { prefilledReservation };
-        }
-    }
-}*/

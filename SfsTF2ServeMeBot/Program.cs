@@ -8,7 +8,7 @@ namespace SfsTF2ServeMeBot;
 
 public class Program
 {
-    public static Version botVersion = new Version(1, 1,1);
+    public static Version botVersion = new Version(1, 1,2);
     public static async Task Main(string[] args)
     {
         var configuration = new ConfigurationBuilder()

@@ -18,11 +18,11 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("reserve_server", "Reserve a server")]
     public async Task ReserveServer(
         [Summary("Region", "Determines which region is used, NA, EU, SEA, AU"),
-         Choice("North America", "NA"),
-         Choice("Europe", "EU"),
-         Choice("South East Asia", "SEA"),
-         Choice("Australia", "AU")]
-        string region,
+         Choice("North America", 1),
+         Choice("Europe", 2),
+         Choice("South East Asia", 3),
+         Choice("Australia", 4)]
+        int region,
         [Summary("StartDate", "The start date in YYYY-MM-DD. I.E. 2024-04-20 for April 20th, 2024")] string startDate,
         [Summary("StartTime", "The start time in a 24 hour clock format HH:MM. I.E. 21:30 for 9:30 PM.")] string startTime,
         [Summary("EndDate", "The start date in YYYY-MM-DD. I.E. 2024-06-09 for June 9th, 2024")] string endDate,
@@ -132,11 +132,11 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("find_servers", "Find available TF2 servers")]
     public async Task FindServers(
         [Summary("Region", "Determines which region is used, NA, EU, SEA, AU"),
-         Choice("North America", "NA"),
-         Choice("Europe", "EU"),
-         Choice("South East Asia", "SEA"),
-         Choice("Australia", "AU")]
-        string region,
+         Choice("North America", 1),
+         Choice("Europe", 2),
+         Choice("South East Asia", 3),
+         Choice("Australia", 4)]
+        int region,
         [Summary("StartDate", "The start date in YYYY-MM-DD. I.E. 2024-04-20 for April 20th, 2024")] string startDate,
         [Summary("StartTime", "The start time in a 24 hour clock format HH:MM. I.E. 21:30 for 9:30 PM.")] string startTime,
         [Summary("EndDate", "The start date in YYYY-MM-DD. I.E. 2024-06-09 for June 9th, 2024")] string endDate,
@@ -223,11 +223,11 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("update_reservation", "Allows you to update a preexisting reservation")]
     public async Task UpdateReservation(
         [Summary("Region", "Determines which region is used, NA, EU, SEA, AU"),
-         Choice("North America", "NA"),
-         Choice("Europe", "EU"),
-         Choice("South East Asia", "SEA"),
-         Choice("Australia", "AU")]
-        string region,
+         Choice("North America", 1),
+         Choice("Europe", 2),
+         Choice("South East Asia", 3),
+         Choice("Australia", 4)]
+        int region,
         [Summary("ReservationId", "You will need this to change anything with the reservation.")] int reservationId,
         [Summary("ServerId", "This is the ServerId of the server you want to change to, use /find_server to get the ServerId.")]int? serverId = null,
         [Summary("StartDate", "This is where you can change the start date in YYYY-MM-DD.")] string? startDate = null,

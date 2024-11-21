@@ -50,16 +50,21 @@ namespace SfsTF2ServeMeBot.Services
                     auto_end = autoEnd
                 }
             };
+            /*string content = "";
+            switch (region)
+            {
+                case 1:
+            }*/
             var response = region switch
             {
                 1 => await _httpClient.PostAsJsonAsync($"https://na.serveme.tf/api/reservations?api_key={_apiKeyNA}",
                     requestBody),
-                2 => await _httpClient.PostAsJsonAsync($"https://serveme.tf/api/reservations?api_key={_apiKeyNA}",
+                2 => await _httpClient.PostAsJsonAsync($"https://serveme.tf/api/reservations?api_key={_apiKeyEU}",
                     requestBody),
-                3 => await _httpClient.PostAsJsonAsync($"https://au.serveme.tf/api/reservations?api_key={_apiKeyNA}",
+                3 => await _httpClient.PostAsJsonAsync($"https://au.serveme.tf/api/reservations?api_key={_apiKeyAU}",
                     requestBody),
                 4 => await _httpClient.PostAsJsonAsync(
-                    $"https://sea.serveme.tf/api/reservations?api_key={_apiKeyNA}", requestBody),
+                    $"https://sea.serveme.tf/api/reservations?api_key={_apiKeySEA}", requestBody),
                 _ => await _httpClient.PostAsJsonAsync($"https://na.serveme.tf/api/reservations?api_key={_apiKeyNA}",
                     requestBody)
             };
@@ -81,9 +86,9 @@ namespace SfsTF2ServeMeBot.Services
 
         public async Task<JObject> FindServersAsync(int region, string startDate, string startTime, string endDate, string endTime)
         {
-            var utcOffset = GetRegionTimeOffset(region);
-            var startsAt = $"{startDate}T{startTime}:00.000{utcOffset}";
-            var endsAt = $"{endDate}T{endTime}:00.000{utcOffset}";
+            //string utcOffset = GetRegionTimeOffset(region);
+            string startsAt = $"{startDate}T{startTime}:00.000{GetRegionTimeOffset(region)}";
+            string endsAt = $"{endDate}T{endTime}:00.000{GetRegionTimeOffset(region)}";
 
             var requestBody = new
             {
@@ -93,16 +98,41 @@ namespace SfsTF2ServeMeBot.Services
                     ends_at = endsAt
                 }
             };
-            HttpResponseMessage response = region switch
+
+            string content = String.Empty;
+            switch (region)
+            {
+                case 1:
+                    var responseNa = await _httpClient.PostAsJsonAsync(
+                        $"https://na.serveme.tf/api/reservations/find_servers?api_key={_apiKeyNA}", requestBody);
+                    content = await responseNa.Content.ReadAsStringAsync();
+                    break;
+                case 2:
+                    var responseEu = await _httpClient.PostAsJsonAsync(
+                        $"https://serveme.tf/api/reservations/find_servers?api_key={_apiKeyEU}", requestBody);
+                    content = await responseEu.Content.ReadAsStringAsync();
+                    break;
+                case 3:
+                    var responseAu = await _httpClient.PostAsJsonAsync(
+                        $"https://au.serveme.tf/api/reservations/find_servers?api_key={_apiKeyAU}", requestBody);
+                    content = await responseAu.Content.ReadAsStringAsync();
+                    break;
+                case 4:
+                    var responseSea = await _httpClient.PostAsJsonAsync(
+                        $"https://sea.serveme.tf/api/reservations/find_servers?api_key={_apiKeySEA}", requestBody);
+                    content = await responseSea.Content.ReadAsStringAsync();
+                    break;
+            }
+            /*var response = region switch
             {
                 1 => await _httpClient.PostAsJsonAsync($"https://na.serveme.tf/api/reservations/find_servers?api_key={_apiKeyNA}", requestBody),
                 2 => await _httpClient.PostAsJsonAsync($"https://serveme.tf/api/reservations/find_servers?api_key={_apiKeyEU}", requestBody),
                 3 => await _httpClient.PostAsJsonAsync($"https://au.serveme.tf/api/reservations/find_servers?api_key={_apiKeyAU}", requestBody),
                 4 => await _httpClient.PostAsJsonAsync($"https://sea.serveme.tf/api/reservations/find_servers?api_key={_apiKeySEA}", requestBody),
                 _ => throw new ArgumentOutOfRangeException(nameof(region), region, null)
-            };
+            };*/
 
-            var content = await response.Content.ReadAsStringAsync();
+            //var content = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"Response Content: {content}");
 
             JObject availableServers;
@@ -233,14 +263,22 @@ namespace SfsTF2ServeMeBot.Services
         }
         private string GetRegionTimeOffset(int region)
         {
-            string utcOffset = region switch
+            string utcOffset = "-05:00";
+            switch (region)
             {
-                1 => "-05:00",
-                2 => "+01:00",
-                3 => "+11:00",
-                4 => "+08:00",
-                _ => "-05:00"
-            };
+                case 1:
+                    utcOffset = "-05:00";
+                    break;
+                case 2:
+                    utcOffset = "+01:00";
+                    break;
+                case 3:
+                    utcOffset = "+11:00";
+                    break;
+                case 4:
+                    utcOffset = "+08:00";
+                    break;
+            }
             return utcOffset;
         }
     }

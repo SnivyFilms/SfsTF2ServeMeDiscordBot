@@ -96,6 +96,8 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                 .AddField("Enabled Demos.tf", reservation["enable_demos_tf"]?.ToString() ?? "N/A", true)
                 .AddField("Auto End Enabled", reservation["auto_end"]?.ToString() ?? "N/A", true)
                 .AddField("Selected Config", ConfigNames.ContainsKey(startingConfigId) ? ConfigNames[startingConfigId] : "Unknown Config", true)
+                .AddField("Connect Info", $"`connect {server["ip_and_port"]}; password {reservation["password"]}`", true)
+                .AddField("SDR Connect Info", $"`connect {reservation["sdr_ip"]}:{reservation["sdr_port"]}; password {reservation["password"]}`", true)
                 .WithColor(Color.Green)
                 .WithFooter(EmbedFooterModule.Footer)
                 .Build();
@@ -107,6 +109,7 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                 .WithTitle("RCON Info")
                 .AddField("RCON Address", server["ip_and_port"]?.ToString() ?? "N/A", true)
                 .AddField("RCON Password", reservation["rcon"]?.ToString() ?? "N/A", true)
+                .AddField("RCON Command", $"`rcon_address {server["ip_and_port"]}; rcon_password {reservation["rcon"]}`")
                 .WithColor(Color.Green)
                 .WithFooter(EmbedFooterModule.Footer)
                 .Build();
@@ -303,6 +306,8 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                 .AddField("Demos Enabled", reservation["enable_demos_tf"]?.ToString() ?? "N/A", true)
                 .AddField("Auto End Enabled", reservation["auto_end"]?.ToString() ?? "N/A", true)
                 .AddField("Selected Config", configName, true)
+                .AddField("Connect Info", $"`connect {server["ip_and_port"]}; password {reservation["password"]}`", true)
+                .AddField("SDR Connect Info", $"`connect {reservation["sdr_ip"]}:{reservation["sdr_port"]}; password {reservation["password"]}`", true)
                 .WithColor(Color.Green)
                 .WithFooter(EmbedFooterModule.Footer)
                 .Build();

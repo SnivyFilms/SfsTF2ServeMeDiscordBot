@@ -105,8 +105,8 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
             var dmChannel = await Context.User.CreateDMChannelAsync();
             var dmEmbed = new EmbedBuilder()
                 .WithTitle("RCON Info")
-                .AddField("RCON Address", reservation["rcon_address"]?.ToString() ?? "N/A", true)
-                .AddField("RCN Password", reservation["rcn_password"]?.ToString() ?? "N/A", true)
+                .AddField("RCON Address", reservation["ip_and_port"]?.ToString() ?? "N/A", true)
+                .AddField("RCON Password", reservation["rcon"]?.ToString() ?? "N/A", true)
                 .WithColor(Color.Green)
                 .WithFooter(EmbedFooterModule.Footer)
                 .Build();

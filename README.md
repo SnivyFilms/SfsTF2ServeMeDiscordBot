@@ -6,10 +6,10 @@ This is a discord bot, coded in C# that is designed to use [na.serveme.tf](https
 > You will need to setup an appsettings.json file for a discord bot token and serveme api keys in the directory where the console program is built, such as \bin\[debug/release]\net8.0
 > ```
 > {
->   "DiscordToken" : "Your Discord Bot Key"
->   "ServemeApiKeyNA": "Your NA Serveme API Key"
->   "ServemeApiKeyEU": "Your EU Serveme API Key"
->   "ServemeApiKeyAU": "Your AU Serveme API Key"
+>   "DiscordToken" : "Your Discord Bot Key",
+>   "ServemeApiKeyNA": "Your NA Serveme API Key",
+>   "ServemeApiKeyEU": "Your EU Serveme API Key",
+>   "ServemeApiKeyAU": "Your AU Serveme API Key",
 >   "ServemeApiKeySEA": "Your SEA Serveme API Key"
 > }
 > ```

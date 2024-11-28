@@ -198,15 +198,33 @@ namespace SfsTF2ServeMeBot.Services
             switch (region)
             {
                 case 1:
-                    utcOffset = "-05:00";
+                    utcOffset = "-04:00";
                     break;
                 case 2:
-                    utcOffset = "+01:00";
+                    utcOffset = "-05:00";
                     break;
                 case 3:
-                    utcOffset = "+11:00";
+                    utcOffset = "-06:00";
                     break;
                 case 4:
+                    utcOffset = "-07:00";
+                    break;
+                case 5:
+                    utcOffset = "-08:00";
+                    break;
+                case 6:
+                    utcOffset = "-09:00";
+                    break;
+                case 7:
+                    utcOffset = "-10:00";
+                    break;
+                case 8:
+                    utcOffset = "+01:00";
+                    break;
+                case 9:
+                    utcOffset = "+11:00";
+                    break;
+                case 10:
                     utcOffset = "+08:00";
                     break;
             }
@@ -218,16 +236,16 @@ namespace SfsTF2ServeMeBot.Services
             string UrlPrefix = "na.";
             switch (region)
             {
-                case 1:
+                case 1 or 2 or 3 or 4 or 5 or 6 or 7:
                     UrlPrefix = "na.";
                     break;
-                case 2:
+                case 8:
                     UrlPrefix = "";
                     break;
-                case 3:
+                case 9:
                     UrlPrefix = "au.";
                     break;
-                case 4:
+                case 10:
                     UrlPrefix = "sea.";
                     break;
                 default:
@@ -242,16 +260,16 @@ namespace SfsTF2ServeMeBot.Services
             string ApiKey = _apiKeyNA;
             switch (region)
             {
-                case 1:
+                case 1 or 2 or 3 or 4 or 5 or 6 or 7:
                     ApiKey = _apiKeyNA;
                     break;
-                case 2:
+                case 8:
                     ApiKey = _apiKeyEU;
                     break;
-                case 3:
+                case 9:
                     ApiKey = _apiKeyAU;
                     break;
-                case 4:
+                case 10:
                     ApiKey = _apiKeySEA;
                     break;
                 default:

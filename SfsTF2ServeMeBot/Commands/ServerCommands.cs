@@ -69,21 +69,15 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
 
         try
         {
+            var startUnix = UnixTimestampModule.ConvertToUnixTimestamp(startDate, startTime, region);
+            var endUnix = UnixTimestampModule.ConvertToUnixTimestamp(endDate, endTime, region);
+
+            string discordStartTimestamp = UnixTimestampModule.FormatForDiscord(startUnix);
+            string discordEndTimestamp = UnixTimestampModule.FormatForDiscord(endUnix);
+
             var reservationResponse = await _servemeService.CreateReservationAsync(
-                region,
-                startDate, 
-                startTime, 
-                endDate, 
-                endTime, 
-                password, 
-                stvPassword, 
-                rcon, 
-                map, 
-                serverId, 
-                startingConfigId, 
-                enablePlugins, 
-                enableDemos,
-                autoEnd);
+                region, startDate, startTime, endDate, endTime, password, 
+                stvPassword, rcon, map, serverId, startingConfigId, enablePlugins, enableDemos, autoEnd);
 
             var reservation = reservationResponse["reservation"];
             var server = reservation["server"];
@@ -91,8 +85,8 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
             var embed = new EmbedBuilder()
                 .WithTitle("Server Reservation Successful")
                 .AddField("Reservation ID", reservation["id"]?.ToString() ?? "N/A", true)
-                .AddField("Start Time", reservation["starts_at"]?.ToString() ?? "N/A", true)
-                .AddField("End Time", reservation["ends_at"]?.ToString() ?? "N/A", true)
+                .AddField("Start Time", discordStartTimestamp, true)
+                .AddField("End Time", discordEndTimestamp, true)
                 .AddField("Server IP", server["ip_and_port"]?.ToString() ?? "N/A", true)
                 .AddField("SDR IP", reservation["sdr_ip"] + ":" + reservation["sdr_port"]?.ToString() ?? "N/A", true)
                 .AddField("Password", reservation["password"]?.ToString() ?? "N/A", true)
@@ -120,14 +114,13 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                 .WithFooter(EmbedFooterModule.Footer)
                 .Build();
             await dmChannel.SendMessageAsync(embed: dmEmbed);
-
         }
         catch (HttpRequestException ex)
         {
             // Handle any errors by informing the user
             var embed = new EmbedBuilder()
                 .WithTitle("Server Reservation Failure")
-                .AddField("Reason:", "Do you have the correct region selected?", true)
+                .AddField("Reason:", "Do you have the correct region selected?\nDid you make sure that the start time and end time are in the correct format?\nDid you make the end time end before the start time?", true)
                 .AddField("Error Code", ex.Message, true)
                 .WithColor(Color.Red)
                 .WithFooter(EmbedFooterModule.Footer)

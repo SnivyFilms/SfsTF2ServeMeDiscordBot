@@ -6,9 +6,9 @@ using SfsTF2ServeMeBot.Services;
 
 namespace SfsTF2ServeMeBot;
 
-public class Program
+public class BotStarter
 {
-    public static Version BotVersion = new Version(1, 1,6);
+    public static Version BotVersion = new Version(1, 2,0);
     public static async Task Main(string[] args)
     {
         var configuration = new ConfigurationBuilder()
@@ -21,8 +21,8 @@ public class Program
             .AddSingleton<DiscordSocketClient>()
             .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
             .AddSingleton<ServemeService>()
-            .AddSingleton<LogsService>()
-            .AddSingleton<DemosService>()
+            //.AddSingleton<LogsService>()
+            //.AddSingleton<DemosService>()
             .AddSingleton<Bot>()
             .AddHttpClient()
             .BuildServiceProvider();

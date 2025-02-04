@@ -13,7 +13,8 @@ This is a discord bot, coded in C# that is designed to use [na.serveme.tf](https
 >   "ServemeApiKeyNA": "Your NA Serveme API Key",
 >   "ServemeApiKeyEU": "Your EU Serveme API Key",
 >   "ServemeApiKeyAU": "Your AU Serveme API Key",
->   "ServemeApiKeySEA": "Your SEA Serveme API Key"
+>   "ServemeApiKeySEA": "Your SEA Serveme API Key",
+>   "LogsApiKey": "Your Logs.tf API key"
 > }
 > ```
 >

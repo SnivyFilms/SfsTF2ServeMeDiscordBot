@@ -21,8 +21,7 @@ public class BotStarter
             .AddSingleton<DiscordSocketClient>()
             .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
             .AddSingleton<ServemeService>()
-            // To Do: Finish Logs Service
-            //.AddSingleton<LogsService>()
+            .AddSingleton<LogsService>()
             //.AddSingleton<DemosService>()
             .AddSingleton<Bot>()
             .AddHttpClient()

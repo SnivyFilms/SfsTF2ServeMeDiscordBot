@@ -1,4 +1,4 @@
-﻿/*using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 
@@ -36,7 +36,15 @@ public class LogsService
             return new JArray();
 
         var queryString = string.Join("&", queryParams);
-        var response = await _httpClient.GetStringAsync($"https://logs.tf/api/v1/log?{queryParams}");
-        return JArray.Parse(response);
+        var response = await _httpClient.GetStringAsync($"https://logs.tf/api/v1/log?{queryString}");
+        Console.WriteLine(response);
+        //return JArray.Parse(response);
+        
+        var jsonResponse = JObject.Parse(response);
+
+        if (jsonResponse["logs"] is JArray logsArray)
+            return logsArray;
+    
+        return new JArray();
     }
-}*/
+}

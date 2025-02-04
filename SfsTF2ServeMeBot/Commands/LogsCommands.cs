@@ -1,4 +1,4 @@
-﻿/*using Discord;
+﻿using Discord;
 using Discord.Commands;
 using Discord.Interactions;
 using SfsTF2ServeMeBot.Services;
@@ -26,42 +26,51 @@ public class LogsCommands : InteractionModuleBase<SocketInteractionContext>
     [Discord.Interactions.Summary("Offset", "The offset for pagination")] int? logOffset = null
     )
     {
-        if (string.IsNullOrEmpty(matchTitle) && string.IsNullOrEmpty(mapName) && string.IsNullOrEmpty(steamIdUploader) && string.IsNullOrEmpty(stringIdPlayers) && logLimit == null && logOffset == null)
+        await DeferAsync();
+        try
         {
-            var embedFailNoParameters = new EmbedBuilder()
-                .WithTitle("No Parameters")
-                .AddField("Error Empty Fields", "You failed to provide any parameters", true)
-                .WithColor(Color.Red)
-                .WithFooter(EmbedFooterModule.Footer)
+            if (string.IsNullOrEmpty(matchTitle) && string.IsNullOrEmpty(mapName) && string.IsNullOrEmpty(steamIdUploader) && string.IsNullOrEmpty(stringIdPlayers) && logLimit == null && logOffset == null)
+            {
+                var embedFailNoParameters = new EmbedBuilder()
+                    .WithTitle("No Parameters")
+                    .AddField("Error Empty Fields", "You failed to provide any parameters", true)
+                    .WithColor(Color.Red)
+                    .WithFooter(EmbedFooterModule.Footer)
+                    .Build();
+
+                await FollowupAsync(embed: embedFailNoParameters);
+                return;
+            }
+
+            var logs = await _logsService.GetLogsAsync(matchTitle, mapName, steamIdUploader, stringIdPlayers, logLimit, logOffset);
+
+            if (logs.Count == 0)
+            {
+                var embedFailNoLogs = new EmbedBuilder()
+                    .WithTitle("No Logs")
+                    .AddField("No Logs Found", "There were no logs found with the given parameters", true)
+                    .WithColor(Color.Red)
+                    .WithFooter(EmbedFooterModule.Footer)
+                    .Build();
+
+                await FollowupAsync(embed: embedFailNoLogs);
+                return;
+            }
+
+            var embed = BuildLogsEmbed(logs, 0).Build();
+
+            var components = new ComponentBuilder()
+                .WithButton("Previous", "logs_page:0", disabled: true)
+                .WithButton("Next", "logs_page:1", disabled: logs.Count <= 25)
                 .Build();
 
-            await FollowupAsync(embed: embedFailNoParameters);
-            return;
+            await FollowupAsync(embed: embed, components: components);
         }
-
-        var logs = await _logsService.GetLogsAsync(matchTitle, mapName, steamIdUploader, stringIdPlayers, logLimit, logOffset);
-
-        if (logs.Count == 0)
+        catch (Exception e)
         {
-            var embedFailNoLogs = new EmbedBuilder()
-                .WithTitle("No Logs")
-                .AddField("No Logs Found", "There was no logs found with the given parameters", true)
-                .WithColor(Color.Red)
-                .WithFooter(EmbedFooterModule.Footer)
-                .Build();
-
-            await FollowupAsync(embed: embedFailNoLogs);
-            return;
+            Console.WriteLine(e);
+            throw;
         }
-
-        var embed = BuildLogsEmbed(logs, 0).Build();
-
-        var components = new ComponentBuilder()
-            .WithButton("Previous", "logs_page:0", disabled: true)
-            .WithButton("Next", $"logs_page:1:{logs}", disabled: logs.Count <= 25)
-            .Build();
-
-        await RespondAsync(embed: embed, components: components);
     }
     
     private EmbedBuilder BuildLogsEmbed(JArray logs, int pageIndex)
@@ -77,7 +86,9 @@ public class LogsCommands : InteractionModuleBase<SocketInteractionContext>
         for (int i = start; i < end; i++)
         {
             var log = logs[i];
-            embed.AddField("Log", $"[Link to Log](https://logs.tf/{log["id"]})", true);
+            var logId = log["id"]?.ToString();
+            var logTitle = log["title"]?.ToString() ?? "No Title";
+            embed.AddField(logTitle, $"[Link to Log](https://logs.tf/{logId})", true);
         }
 
         return embed;
@@ -93,7 +104,7 @@ public class LogsCommands : InteractionModuleBase<SocketInteractionContext>
 
         var components = new ComponentBuilder()
             .WithButton("Previous", $"logs_page:{pageIndex - 1}:{logs}", disabled: pageIndex == 0)
-            .WithButton("Next", $"logs_page:{pageIndex + 1}:{logs}", disabled: (pageIndex + 1) * 25 >= logs.Count)
+            .WithButton("Next", $"logs_page:{pageIndex + 1}:{logs}", disabled: (pageIndex + 1) * 10 >= logs.Count)
             .Build();
 
         await ModifyOriginalResponseAsync(msg =>
@@ -102,4 +113,4 @@ public class LogsCommands : InteractionModuleBase<SocketInteractionContext>
             msg.Components = components;
         });
     }
-}*/
+}

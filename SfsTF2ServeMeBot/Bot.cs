@@ -39,6 +39,8 @@ public class Bot
         await _client.LoginAsync(TokenType.Bot, token);
         await _client.StartAsync();
 
+        await _commands.AddModulesAsync(typeof(Bot).Assembly, _services);
+
         await Task.Delay(-1); // Keep the bot running
     }
 
@@ -49,29 +51,19 @@ public class Bot
 
     private async Task SyncCommandsAsync()
     {
-        Console.WriteLine("Loading command modules...");
-        var modules = await _commands.AddModulesAsync(typeof(Bot).Assembly, _services);
+        Console.WriteLine("Registering commands...");
 
-        foreach (var module in modules)
-        {
-            Console.WriteLine($"Loaded module: {module.Name}");
-        }
-        
-        //ulong testGuildId = 654407422861115426;
-        //await _commands.RegisterCommandsToGuildAsync(testGuildId);
-        //await _commands.AddModulesAsync(typeof(Bot).Assembly, _services); // Register all command modules
         try
         {
             await _commands.RegisterCommandsGloballyAsync();
-            Console.WriteLine("Global commands registered successfully.");
-            //await _commands.RegisterCommandsToGuildAsync(testGuildId);
+            Console.WriteLine("Commands registered successfully.");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed to register global commands: {ex.Message}");
+            Console.WriteLine($"Failed to register commands: {ex.Message}");
         }
     }
-
+    
     private Task LogAsync(LogMessage log)
     {
         Console.WriteLine(log.ToString());

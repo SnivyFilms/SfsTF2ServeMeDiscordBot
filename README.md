@@ -27,10 +27,9 @@ Command | Command Description
 /update_reservation | Allows users to update parts of the server reservation.
 /help | Shows all the parameters and a description about it
 /ping | Gets the latency of the bot
+/time_zone_help | Goes over how time zones work in the US
 
 > [!IMPORTANT]
-> Time parameters is determined by region. NA: -5, EU: +1, AU: +11, SEA: +8
-> 
 > You're unable to update the reservation to change the remote console (RCON) password
 
 > [!NOTE]

@@ -60,8 +60,8 @@ public class LogsCommands : InteractionModuleBase<SocketInteractionContext>
             var embed = BuildLogsEmbed(logs, 0).Build();
 
             var components = new ComponentBuilder()
-                .WithButton("⬅", "logs_page:0", disabled: true)
-                .WithButton("➡", "logs_page:1", disabled: logs.Count <= 25)
+                .WithButton(":arrow_left:", "logs_page:0", disabled: true)
+                .WithButton(":arrow_right:", "logs_page:1", disabled: logs.Count <= 24)
                 .Build();
 
             await FollowupAsync(embed: embed, components: components);
@@ -104,7 +104,7 @@ public class LogsCommands : InteractionModuleBase<SocketInteractionContext>
 
         var components = new ComponentBuilder()
             .WithButton("Previous", $"logs_page:{pageIndex - 1}:{logs}", disabled: pageIndex == 0)
-            .WithButton("Next", $"logs_page:{pageIndex + 1}:{logs}", disabled: (pageIndex + 1) * 10 >= logs.Count)
+            .WithButton("Next", $"logs_page:{pageIndex + 1}:{logs}", disabled: (pageIndex + 1) * 24 >= logs.Count)
             .Build();
 
         await ModifyOriginalResponseAsync(msg =>

@@ -174,8 +174,8 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
             var embed = BuildServerEmbed(servers, pageIndex);
         
             var buttons = new ComponentBuilder()
-                .WithButton("⬅", "prev_page", ButtonStyle.Primary, disabled: pageIndex == 0)
-                .WithButton("➡", "next_page", ButtonStyle.Primary, disabled: (pageIndex + 1) * 10 >= servers.Count);
+                .WithButton(":arrow_left:", "prev_page", ButtonStyle.Primary, disabled: pageIndex == 0)
+                .WithButton(":arrow_right:", "next_page", ButtonStyle.Primary, disabled: (pageIndex + 1) * 10 >= servers.Count);
 
             var message = await FollowupAsync(embed: embed.Build(), components: buttons.Build());
 
@@ -195,8 +195,8 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
 
                 var newEmbed = BuildServerEmbed(servers, pageIndex);
                 var updatedButtons = new ComponentBuilder()
-                    .WithButton("⬅", "prev_page", ButtonStyle.Primary, disabled: pageIndex == 0)
-                    .WithButton("➡", "next_page", ButtonStyle.Primary, disabled: (pageIndex + 1) * 10 >= servers.Count);
+                    .WithButton(":arrow_left:", "prev_page", ButtonStyle.Primary, disabled: pageIndex == 0)
+                    .WithButton(":arrow_right:", "next_page", ButtonStyle.Primary, disabled: (pageIndex + 1) * 24 >= servers.Count);
 
                 await component.UpdateAsync(msg =>
                 {
@@ -343,8 +343,8 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
             .WithFooter(EmbedFooterModule.Footer)
             .WithColor(Color.Blue);
 
-        int start = pageIndex * 25;
-        int end = Math.Min(start + 25, servers.Count);
+        int start = pageIndex * 24;
+        int end = Math.Min(start + 24, servers.Count);
 
         for (int i = start; i < end; i++)
         {

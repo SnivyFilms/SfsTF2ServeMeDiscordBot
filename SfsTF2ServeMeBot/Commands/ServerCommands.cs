@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
+using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 using SfsTF2ServeMeBot.Modules;
 using SfsTF2ServeMeBot.Services;
@@ -134,34 +135,28 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("find_servers", "Find available TF2 servers")]
     public async Task FindServers(
         [Summary("Region", "Determines which region is used, NA, EU, SEA, AU"),
-         Choice("US EDT (-4) ", 1),
-         Choice("US EST / CDT (-5)", 2),
-         Choice("US CST / MDT (-6)", 3),
-         Choice("US MST / PDT (-7)", 4),
-         Choice("US PST / AKDT (-8)", 5),
-         Choice("US AKST (-9)", 6),
-         Choice("US HST (-10)", 7),
-         Choice("Europe (+1)", 8),
-         Choice("South East Asia (+11)", 9),
-         Choice("Australia (+8)", 10)]
+        Choice("US EDT (-4) ", 1),
+        Choice("US EST / CDT (-5)", 2),
+        Choice("US CST / MDT (-6)", 3),
+        Choice("US MST / PDT (-7)", 4),
+        Choice("US PST / AKDT (-8)", 5),
+        Choice("US AKST (-9)", 6),
+        Choice("US HST (-10)", 7),
+        Choice("Europe (+1)", 8),
+        Choice("South East Asia (+11)", 9),
+        Choice("Australia (+8)", 10)]
         int region,
         [Summary("StartDate", "The start date in YYYY-MM-DD. I.E. 2024-04-20 for April 20th, 2024")] string startDate,
-        [Summary("StartTime", "The start time in a 24 hour clock format HH:MM. I.E. 21:30 for 9:30 PM.")] string startTime,
-        [Summary("EndDate", "The start date in YYYY-MM-DD. I.E. 2024-06-09 for June 9th, 2024")] string endDate,
-        [Summary("EndTime", "The start time in a 24 hour clock format HH:MM. I.E. 23:30 for 11:30 PM.")] string endTime)
+        [Summary("StartTime", "The start time in a 24-hour clock format HH:MM. I.E. 21:30 for 9:30 PM.")] string startTime,
+        [Summary("EndDate", "The end date in YYYY-MM-DD. I.E. 2024-06-09 for June 9th, 2024")] string endDate,
+        [Summary("EndTime", "The end time in a 24-hour clock format HH:MM. I.E. 23:30 for 11:30 PM.")] string endTime)
     {
         await DeferAsync();
-
         try
         {
-            var availableServers = await _servemeService.FindServersAsync(
-                region,
-                startDate, 
-                startTime, 
-                endDate, 
-                endTime);
+            var availableServers = await _servemeService.FindServersAsync(region, startDate, startTime, endDate, endTime);
             var servers = availableServers["servers"]?.ToList();
-        
+
             if (servers == null || servers.Count == 0)
             {
                 var noServerEmbed = new EmbedBuilder()
@@ -170,45 +165,53 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                     .WithColor(Color.Red)
                     .WithFooter(EmbedFooterModule.Footer)
                     .Build();
+
                 await FollowupAsync(embed: noServerEmbed);
                 return;
             }
 
             int pageIndex = 0;
             var embed = BuildServerEmbed(servers, pageIndex);
-            var message = await FollowupAsync(embed: embed.Build());
+        
+            var buttons = new ComponentBuilder()
+                .WithButton("⬅", "prev_page", ButtonStyle.Primary, disabled: pageIndex == 0)
+                .WithButton("➡", "next_page", ButtonStyle.Primary, disabled: (pageIndex + 1) * 10 >= servers.Count);
 
-            await message.AddReactionAsync(new Emoji("⬅️"));
-            await message.AddReactionAsync(new Emoji("➡️"));
+            var message = await FollowupAsync(embed: embed.Build(), components: buttons.Build());
 
-            var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(5));
-
-            // Set up an event handler for reactions
-            Context.Client.ReactionAdded += async (cache, _, reaction) =>
+            async Task HandleInteraction(SocketMessageComponent component)
             {
-                if (reaction.MessageId != message.Id || reaction.UserId != Context.User.Id) return;
+                if (component.Message.Id != message.Id) return;
+                if (component.User.Id != Context.User.Id) return;
 
-                if (reaction.Emote.Name == "➡️")
+                if (component.Data.CustomId == "next_page" && (pageIndex + 1) * 10 < servers.Count)
                 {
-                    if ((pageIndex + 1) * 10 < servers.Count)
-                    {
-                        pageIndex++;
-                        var newEmbed = BuildServerEmbed(servers, pageIndex);
-                        await message.ModifyAsync(msg => msg.Embed = newEmbed.Build());
-                    }
+                    pageIndex++;
                 }
-                else if (reaction.Emote.Name == "⬅️")
+                else if (component.Data.CustomId == "prev_page" && pageIndex > 0)
                 {
-                    if (pageIndex > 0)
-                    {
-                        pageIndex--;
-                        var newEmbed = BuildServerEmbed(servers, pageIndex);
-                        await message.ModifyAsync(msg => msg.Embed = newEmbed.Build());
-                    }
+                    pageIndex--;
                 }
-                var msg = await cache.GetOrDownloadAsync();
-                await msg.RemoveReactionAsync(reaction.Emote, Context.User);
-            };
+
+                var newEmbed = BuildServerEmbed(servers, pageIndex);
+                var updatedButtons = new ComponentBuilder()
+                    .WithButton("⬅️ Previous", "prev_page", ButtonStyle.Primary, disabled: pageIndex == 0)
+                    .WithButton("Next ➡️", "next_page", ButtonStyle.Primary, disabled: (pageIndex + 1) * 10 >= servers.Count);
+
+                await component.UpdateAsync(msg =>
+                {
+                    msg.Embed = newEmbed.Build();
+                    msg.Components = updatedButtons.Build();
+                });
+            }
+
+            Context.Client.ButtonExecuted += HandleInteraction;
+
+            // Automatically remove event handler after 5 minutes to prevent memory leaks
+            _ = Task.Delay(TimeSpan.FromMinutes(5)).ContinueWith(_ =>
+            {
+                Context.Client.ButtonExecuted -= HandleInteraction;
+            });
         }
         catch (HttpRequestException ex)
         {
@@ -219,13 +222,9 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                 .WithColor(Color.Red)
                 .WithFooter(EmbedFooterModule.Footer)
                 .Build();
+
             await FollowupAsync(embed: embed);
         }
-        /*catch (Exception ex)
-        {
-            await FollowupAsync("An unexpected error occurred.");
-            Console.WriteLine($"Unexpected error: {ex.Message}");
-        }*/
     }
 
     [SlashCommand("update_reservation", "Allows you to update a preexisting reservation")]

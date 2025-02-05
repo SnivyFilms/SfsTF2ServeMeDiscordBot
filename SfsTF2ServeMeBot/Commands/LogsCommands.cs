@@ -60,8 +60,8 @@ public class LogsCommands : InteractionModuleBase<SocketInteractionContext>
             var embed = BuildLogsEmbed(logs, 0).Build();
 
             var components = new ComponentBuilder()
-                .WithButton("Previous", "logs_page:0", disabled: true)
-                .WithButton("Next", "logs_page:1", disabled: logs.Count <= 25)
+                .WithButton("⬅", "logs_page:0", disabled: true)
+                .WithButton("➡", "logs_page:1", disabled: logs.Count <= 25)
                 .Build();
 
             await FollowupAsync(embed: embed, components: components);

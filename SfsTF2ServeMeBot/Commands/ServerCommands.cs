@@ -195,8 +195,8 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
 
                 var newEmbed = BuildServerEmbed(servers, pageIndex);
                 var updatedButtons = new ComponentBuilder()
-                    .WithButton("⬅️ Previous", "prev_page", ButtonStyle.Primary, disabled: pageIndex == 0)
-                    .WithButton("Next ➡️", "next_page", ButtonStyle.Primary, disabled: (pageIndex + 1) * 10 >= servers.Count);
+                    .WithButton("⬅", "prev_page", ButtonStyle.Primary, disabled: pageIndex == 0)
+                    .WithButton("➡", "next_page", ButtonStyle.Primary, disabled: (pageIndex + 1) * 10 >= servers.Count);
 
                 await component.UpdateAsync(msg =>
                 {
@@ -343,8 +343,8 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
             .WithFooter(EmbedFooterModule.Footer)
             .WithColor(Color.Blue);
 
-        int start = pageIndex * 10;
-        int end = Math.Min(start + 10, servers.Count);
+        int start = pageIndex * 25;
+        int end = Math.Min(start + 25, servers.Count);
 
         for (int i = start; i < end; i++)
         {
@@ -352,7 +352,7 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
             var serverName = server["name"]?.ToString() ?? "Unknown";
             var serverId = server["id"]?.ToString() ?? "N/A";
 
-            embed.AddField("Server", $"{serverName} (ID: {serverId})", false);
+            embed.AddField("Server", $"{serverName} (ID: {serverId})", true);
         }
 
         return embed;

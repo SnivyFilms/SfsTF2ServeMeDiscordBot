@@ -164,7 +164,7 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                 if (component.Message.Id != message.Id) return;
                 if (component.User.Id != Context.User.Id) return;
 
-                if (component.Data.CustomId == "next_page" && (pageIndex + 1) * 10 < servers.Count)
+                if (component.Data.CustomId == "next_page" && (pageIndex + 1) * 24 < servers.Count)
                 {
                     pageIndex++;
                 }
@@ -188,9 +188,18 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
             Context.Client.ButtonExecuted += HandleInteraction;
 
             // Automatically remove event handler after 5 minutes to prevent memory leaks
-            _ = Task.Delay(TimeSpan.FromMinutes(5)).ContinueWith(_ =>
+            _ = Task.Delay(TimeSpan.FromMinutes(5)).ContinueWith(async _ =>
             {
                 Context.Client.ButtonExecuted -= HandleInteraction;
+
+                var disabledButtons = new ComponentBuilder()
+                    .WithButton("\u2190", "prev_page", ButtonStyle.Primary, disabled: true)
+                    .WithButton("\u2192", "next_page", ButtonStyle.Primary, disabled: true);
+
+                await message.ModifyAsync(msg =>
+                {
+                    msg.Components = disabledButtons.Build();
+                });
             });
         }
         catch (HttpRequestException ex)
@@ -341,9 +350,18 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
 
         Context.Client.ButtonExecuted += HandleInteraction;
 
-        _ = Task.Delay(TimeSpan.FromMinutes(5)).ContinueWith(_ =>
+        _ = Task.Delay(TimeSpan.FromMinutes(5)).ContinueWith(async _ =>
         {
             Context.Client.ButtonExecuted -= HandleInteraction;
+
+            var disabledButtons = new ComponentBuilder()
+                .WithButton("\u2190", "prev_page", ButtonStyle.Primary, disabled: true)
+                .WithButton("\u2192", "next_page", ButtonStyle.Primary, disabled: true);
+
+            await message.ModifyAsync(msg =>
+            {
+                msg.Components = disabledButtons.Build();
+            });
         });
     }
     

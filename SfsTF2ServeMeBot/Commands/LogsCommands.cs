@@ -29,7 +29,7 @@ public class LogsCommands : InteractionModuleBase<SocketInteractionContext>
         await DeferAsync();
         try
         {
-            if (string.IsNullOrEmpty(matchTitle) && string.IsNullOrEmpty(mapName) && string.IsNullOrEmpty(steamIdUploader) && string.IsNullOrEmpty(stringIdPlayers) && logLimit == null && logOffset == null)
+            if (string.IsNullOrEmpty(matchTitle) && string.IsNullOrEmpty(mapName) && string.IsNullOrEmpty(steamIdUploader) && stringIdPlayers == null && logLimit == null && logOffset == null)
             {
                 var embedFailNoParameters = new EmbedBuilder()
                     .WithTitle("No Parameters")
@@ -61,10 +61,24 @@ public class LogsCommands : InteractionModuleBase<SocketInteractionContext>
 
             var components = new ComponentBuilder()
                 .WithButton("\u2190", "logs_page:0", disabled: true)
-                .WithButton(":\u2192", "logs_page:1", disabled: logs.Count <= 24)
+                .WithButton("\u2192", "logs_page:1", disabled: logs.Count <= 24)
                 .Build();
 
-            await FollowupAsync(embed: embed, components: components);
+            var message = await FollowupAsync(embed: embed, components: components);
+
+            // Automatically disable buttons after 5 minutes to prevent memory leaks
+            _ = Task.Delay(TimeSpan.FromMinutes(5)).ContinueWith(async _ =>
+            {
+                var disabledComponents = new ComponentBuilder()
+                    .WithButton("\u2190", "logs_page:0", disabled: true)
+                    .WithButton("\u2192", "logs_page:1", disabled: true)
+                    .Build();
+
+                await message.ModifyAsync(msg =>
+                {
+                    msg.Components = disabledComponents;
+                });
+            });
         }
         catch (Exception e)
         {
@@ -72,7 +86,7 @@ public class LogsCommands : InteractionModuleBase<SocketInteractionContext>
             throw;
         }
     }
-    
+
     private EmbedBuilder BuildLogsEmbed(JArray logs, int pageIndex)
     {
         var embed = new EmbedBuilder()
@@ -93,7 +107,7 @@ public class LogsCommands : InteractionModuleBase<SocketInteractionContext>
 
         return embed;
     }
-    
+
     [ComponentInteraction("logs_page:*")]
     public async Task HandlePageChange(string page)
     {

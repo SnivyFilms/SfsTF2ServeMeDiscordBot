@@ -39,29 +39,7 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
         [Summary("RconPassword", "Rcon Password, This cannot be changed after reserving the server. This will be DMed to you.")] string rcon,
         [Summary("Map", "This is the map that the server will start on.")] string map,
         [Summary("ServerId", "This is the ServerId of the server you want to reserve, use /find_server to get the ServerId.")]int serverId,
-        [Summary("StartingConfig", "This is the config that the server will start on."),
-         Choice("RGL 6s 5CP Improved Timers", 99),
-         Choice("RGL 6s 5CP Match Half 1", 65),
-         Choice("RGL 6s 5CP Match Half 2", 66),
-         Choice("RGL 6s 5CP Match Pro", 109),
-         Choice("RGL 6s 5CP Scrim", 69),
-         Choice("RGL 6s KOTH", 67),
-         Choice("RGL 6s KOTH BO5", 68),
-         Choice("RGL 6s KOTH Pro", 110),
-         Choice("RGL 6s KOTH Scrim", 113),
-         Choice("RGL 7s KOTH", 33),
-         Choice("RGL 7s KOTH BO5", 32),
-         Choice("RGL 7s Stopwatch", 34),
-         Choice("RGL HL KOTH", 53),
-         Choice("RGL HL KOTH BO5", 54),
-         Choice("RGL HL Stopwatch", 55),
-         Choice("RGL NR6s 5CP Match Half 1", 86),
-         Choice("RGL NR6s 5CP Match Half 2", 87),
-         Choice("RGL NR6s 5CP Scrim", 88),
-         Choice("RGL NR6s KOTH", 91),
-         Choice("RGL NR6s KOTH BO5", 92),
-         Choice("RGL NR6s Stopwatch", 93)]
-        int startingConfigId,
+        [Summary("StartingConfig", "This is the config that the server will start on, use /config_ids to get the config ids")] int startingConfigId,
         [Summary("EnablePlugins", "Enables/Disables plugins, such as SOAPs.")] bool enablePlugins,
         [Summary("EnableDemos", "Enables/Disables STV demo uploading to demos.tf.")] bool enableDemos,
         [Summary("AutoEnd", "Enables/Disables the server from ending when the server empties out.")] bool autoEnd)
@@ -96,7 +74,7 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                 .AddField("Plugins Enabled", reservation["enable_plugins"]?.ToString() ?? "N/A", true)
                 .AddField("Enabled Demos.tf", reservation["enable_demos_tf"]?.ToString() ?? "N/A", true)
                 .AddField("Auto End Enabled", reservation["auto_end"]?.ToString() ?? "N/A", true)
-                .AddField("Selected Config", ConfigNames.ContainsKey(startingConfigId) ? ConfigNames[startingConfigId] : "Unknown Config", true)
+                .AddField("Selected Config", _configNames.ContainsKey(startingConfigId) ? _configNames[startingConfigId] : "Unknown Config", true)
                 .AddField("Connect Info", $"```yaml\nconnect {server["ip_and_port"]}; password {reservation["password"]}\n```", false)
                 .AddField("STV Connect Info", $"```yaml\nconnect {server["ip"]}:{reservation["tv_port"]}; password {reservation["tv_password"]}\n```", false)
                 .AddField("SDR Connect Info", $"```yaml\nconnect {reservation["sdr_ip"]}:{reservation["sdr_port"]}; password {reservation["password"]}\n```", false)
@@ -252,29 +230,7 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
         [Summary("ServerPassword", "This is where you can change the password that people will use to connect to the server.")] string? password = null,
         [Summary("StvPassword", "This is where you can change the password that people will use to connect to the STV of server.")] string? stvPassword = null,
         [Summary("Map", "This is where you can change the map that the server will start on.")] string? map = null,
-        [Summary("StartingConfig", "This is where you can change the config that the server will start on."),
-         Choice("RGL 6s 5CP Improved Timers", 99),
-         Choice("RGL 6s 5CP Match Half 1", 65),
-         Choice("RGL 6s 5CP Match Half 2", 66),
-         Choice("RGL 6s 5CP Match Pro", 109),
-         Choice("RGL 6s 5CP Scrim", 69),
-         Choice("RGL 6s KOTH", 67),
-         Choice("RGL 6s KOTH BO5", 68),
-         Choice("RGL 6s KOTH Pro", 110),
-         Choice("RGL 6s KOTH Scrim", 113),
-         Choice("RGL 7s KOTH", 33),
-         Choice("RGL 7s KOTH BO5", 32),
-         Choice("RGL 7s Stopwatch", 34),
-         Choice("RGL HL KOTH", 53),
-         Choice("RGL HL KOTH BO5", 54),
-         Choice("RGL HL Stopwatch", 55),
-         Choice("RGL NR6s 5CP Match Half 1", 86),
-         Choice("RGL NR6s 5CP Match Half 2", 87),
-         Choice("RGL NR6s 5CP Scrim", 88),
-         Choice("RGL NR6s KOTH", 91),
-         Choice("RGL NR6s KOTH BO5", 92),
-         Choice("RGL NR6s Stopwatch", 93)]
-        int? startingConfigId = null,
+        [Summary("StartingConfig", "This is where you can change the config that the server will start on.")] int? startingConfigId = null,
         [Summary("EnablePlugins", "This is where you can Enable/Disable plugins, such as SOAPs.")] bool? enablePlugins = null,
         [Summary("EnableDemos", "This is where you can Enable/Disable STV demo uploading to demos.tf.")] bool? enableDemos = null,
         [Summary("AutoEnd", "This is where you can change the Enable/Disable the server from ending when the server empties out.")] bool? autoEnd = null)
@@ -301,8 +257,8 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
             var server = reservation["server"];
 
             int serverConfigId = reservation["server_config_id"]?.Value<int>() ?? -1;
-            string configName = ConfigNames.ContainsKey(serverConfigId) 
-                ? ConfigNames[serverConfigId] 
+            string configName = _configNames.ContainsKey(serverConfigId) 
+                ? _configNames[serverConfigId] 
                 : "Unknown Config";
             var embed = new EmbedBuilder()
                 .WithTitle("Server Reservation Updated Successfully")
@@ -340,6 +296,57 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
             await FollowupAsync(embed: embed);
         }
     }
+    
+    [SlashCommand("config_ids", "Get all available config IDs")]
+    public async Task GetConfigIds()
+    {
+        await DeferAsync();
+
+        int pageIndex = 0;
+        var embed = BuildConfigIdsEmbed(pageIndex);
+
+        var buttons = new ComponentBuilder()
+            .WithButton("\u2190", "prev_page", ButtonStyle.Primary, disabled: pageIndex == 0)
+            .WithButton("\u2192", "next_page", ButtonStyle.Primary, disabled: (pageIndex + 1) * 24 >= _configNames.Count);
+
+        var message = await FollowupAsync(embed: embed.Build(), components: buttons.Build());
+
+        async Task HandleInteraction(SocketMessageComponent component)
+        {
+            if (component.Message.Id != message.Id) 
+                return;
+            if (component.User.Id != Context.User.Id) 
+                return;
+
+            if (component.Data.CustomId == "next_page" && (pageIndex + 1) * 24 < _configNames.Count)
+            {
+                pageIndex++;
+            }
+            else if (component.Data.CustomId == "prev_page" && pageIndex > 0)
+            {
+                pageIndex--;
+            }
+
+            var newEmbed = BuildConfigIdsEmbed(pageIndex);
+            var updatedButtons = new ComponentBuilder()
+                .WithButton("\u2190", "prev_page", ButtonStyle.Primary, disabled: pageIndex == 0)
+                .WithButton("\u2192", "next_page", ButtonStyle.Primary, disabled: (pageIndex + 1) * 24 >= _configNames.Count);
+
+            await component.UpdateAsync(msg =>
+            {
+                msg.Embed = newEmbed.Build();
+                msg.Components = updatedButtons.Build();
+            });
+        }
+
+        Context.Client.ButtonExecuted += HandleInteraction;
+
+        _ = Task.Delay(TimeSpan.FromMinutes(5)).ContinueWith(_ =>
+        {
+            Context.Client.ButtonExecuted -= HandleInteraction;
+        });
+    }
+    
     private EmbedBuilder BuildServerEmbed(List<JToken> servers, int pageIndex)
     {
         var embed = new EmbedBuilder()
@@ -361,28 +368,110 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
 
         return embed;
     }
-    private readonly Dictionary<int, string> ConfigNames = new Dictionary<int, string>
+    
+    private EmbedBuilder BuildConfigIdsEmbed(int pageIndex)
     {
-        { 99, "RGL 6s 5CP Improved Timers" },
-        { 65, "RGL 6s 5CP Match Half 1" },
-        { 66, "RGL 6s 5CP Match Half 2" },
-        { 109, "RGL 6s 5CP Match Pro" },
-        { 69, "RGL 6s 5CP Scrim" },
-        { 67, "RGL 6s KOTH" },
-        { 68, "RGL 6s KOTH BO5" },
-        { 110, "RGL 6s KOTH Pro" },
-        { 113, "RGL 6s KOTH Scrim" },
-        { 33, "RGL 7s KOTH" },
+        var embed = new EmbedBuilder()
+            .WithTitle("Available Config IDs")
+            .WithColor(Color.Blue)
+            .WithFooter(EmbedFooterModule.Footer);
+
+        int start = pageIndex * 24;
+        int end = Math.Min(start + 24, _configNames.Count);
+
+        foreach (var config in _configNames.Skip(start).Take(end - start))
+        {
+            embed.AddField($"ID: {config.Key}", config.Value, true);
+        }
+
+        return embed;
+    }
+    
+    private readonly Dictionary<int, string> _configNames = new Dictionary<int, string>
+    {
+        { 1, "ETF2L" },
+        { 2, "ETF2L 6v6" },
+        { 3, "ETF2L 9v9" },
+        { 4, "ETF2L 6v6 5CP" },
+        { 5, "ETF2L 6v6 CTF" },
+        { 6, "ETF2L 6v6 Stopwatch" },
+        { 7, "ETF2L 9v9 5CP" },
+        { 8, "ETF2L 9v9 CTF" },
+        { 9, "ETF2L 9v9 KOTH" },
+        { 10, "ETF2L 9v9 Stopwatch" },
+        { 11, "ETF2L Ultiduo" },
+        { 12, "ETF2L BBall" },
+        { 31, "TFCL Ulti" },
         { 32, "RGL 7s KOTH BO5" },
+        { 33, "RGL 7s KOTH" },
         { 34, "RGL 7s Stopwatch" },
+        { 35, "RSP Standard" },
+        { 36, "RSP Stopwatch" },
+        { 37, "RSP KOTH" },
+        { 38, "TFCL 6s KOTH" },
+        { 39, "TFCL 6s Standard" },
+        { 40, "TFCL 6v6 S3" },
+        { 41, "TFCL 9v9 S1" },
+        { 42, "TFCL HL KOTH" },
+        { 43, "TFCL HL Standard" },
+        { 44, "TFCL Ulti" },
+        { 45, "TFCL Ultiduo Standard" },
+        { 46, "Essentials 5CP" },
+        { 47, "GIO 6v6" },
+        { 48, "GIO 6v6 KOTH" },
+        { 49, "GIO 6v6 Stopwatch" },
+        { 50, "GIO 6v6 Medieval CP" },
         { 53, "RGL HL KOTH" },
         { 54, "RGL HL KOTH BO5" },
         { 55, "RGL HL Stopwatch" },
+        { 57, "KnightComp" },
+        { 58, "KnightComp 5CP" },
+        { 59, "KnightComp KOTH" },
+        { 60, "RGL MM 5CP" },
+        { 61, "RGL MM KOTH" },
+        { 63, "RGL MM KOTH BO5" },
+        { 64, "RGL MM Stopwatch" },
+        { 65, "RGL 6s 5CP Match Half 1" },
+        { 66, "RGL 6s 5CP Match Half 2" },
+        { 67, "RGL 6s KOTH" },
+        { 68, "RGL 6s KOTH BO5" },
+        { 69, "RGL 6s 5CP Scrim" },
+        { 70, "Scream CPoint" },
+        { 71, "Scream KOTH" },
+        { 72, "Scream PD" },
+        { 73, "Scream PLR" },
+        { 74, "Scream Stopwatch" },
+        { 76, "Respawn 4s KOTH" },
+        { 77, "Respawn 4s Standard" },
+        { 78, "Respawn HL KOTH" },
+        { 79, "Respawn HL Standard" },
+        { 80, "Respawn HL Stopwatch" },
         { 86, "RGL NR6s 5CP Match Half 1" },
         { 87, "RGL NR6s 5CP Match Half 2" },
         { 88, "RGL NR6s 5CP Scrim" },
         { 91, "RGL NR6s KOTH" },
         { 92, "RGL NR6s KOTH BO5" },
-        { 93, "RGL NR6s Stopwatch" }
+        { 93, "RGL NR6s Stopwatch" },
+        { 99, "RGL 6s 5CP Improved Timers" },
+        { 107, "TFArena 6v6" },
+        { 109, "RGL 6s 5CP Match Pro" },
+        { 110, "RGL 6s KOTH Pro" },
+        { 113, "RGL 6s KOTH Scrim" },
+        { 114, "TFArena 6v6 S4" },
+        { 115, "TFArena 6v6 S4" },
+        { 116, "RGL PT Push" },
+        { 117, "RGL UD Ultiduo" },
+        { 118, "PT PUG" },
+        { 121, "CLTF2 4s 3CP" },
+        { 122, "CLTF2 4s KOTH" },
+        { 123, "Fireside 6v6 5CP" },
+        { 124, "Fireside 6v6 KOTH" },
+        { 125, "Fireside 6v6 Unity" },
+        { 126, "2v2 MGE" },
+        { 127, "PT Global Official" },
+        { 128, "PT Global PUG" },
+        { 129, "CLTF2 Ultiduo" },
+        { 130, "SS 5CP" },
+        { 131, "SS KOTH" }
     };
 }

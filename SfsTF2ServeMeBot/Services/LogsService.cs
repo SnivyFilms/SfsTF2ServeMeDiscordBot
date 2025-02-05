@@ -17,6 +17,7 @@ public class LogsService
 
     public async Task<JArray> GetLogsAsync(string? matchTitle, string? mapName, string? steamIdUploader, string? stringIdPlayers, int? logLimit, int? logOffset)
     {
+        // Builds the request for the logs.tf API
         var queryParams = new List<string>();
 
         if (!string.IsNullOrEmpty(matchTitle))
@@ -32,19 +33,22 @@ public class LogsService
         if (logOffset.HasValue)
             queryParams.Add($"offset={logOffset.Value}");
 
+        // Returns if there is nothing in the query
         if (queryParams.Count == 0)
             return new JArray();
 
+        // Sends the request
         var queryString = string.Join("&", queryParams);
         var response = await _httpClient.GetStringAsync($"https://logs.tf/api/v1/log?{queryString}");
-        Console.WriteLine(response);
-        //return JArray.Parse(response);
+        //Console.WriteLine(response);
         
         var jsonResponse = JObject.Parse(response);
 
+        // Returns the logs
         if (jsonResponse["logs"] is JArray logsArray)
             return logsArray;
     
+        // Fail safe just in case it fails at some point
         return new JArray();
     }
 }

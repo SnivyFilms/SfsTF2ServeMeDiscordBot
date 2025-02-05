@@ -23,15 +23,17 @@ namespace SfsTF2ServeMeBot.Services
             _apiKeySEA = configuration["ServemeApiKeySEA"];
             //_httpClient.Timeout = TimeSpan.FromSeconds(10);
         }
-
-        // Existing method for creating reservations
+        
+        // Create Reservation Command Handle
         public async Task<JObject> CreateReservationAsync(int region, string startDate, string startTime, string endDate,
             string endTime, string passwordString, string stvPasswordString, string rconString, string mapString, 
             int serverId, int? serverConfigId, bool enablePlugins, bool enableDemos, bool autoEnd)
         {
+            // Gets start time and the regional time differences for the reservation, combines date and time into one
             var startsAt = $"{startDate}T{startTime}:00.000{GetRegionTimeOffset(region)}";
             var endsAt = $"{endDate}T{endTime}:00.000{GetRegionTimeOffset(region)}";
 
+            // Main body of the reservation, covers basically everything else inputted
             var requestBody = new
             {
                 reservation = new
@@ -49,10 +51,12 @@ namespace SfsTF2ServeMeBot.Services
                     auto_end = autoEnd
                 }
             };
+            // Sends api request
             var response = await _httpClient.PostAsJsonAsync(
                 $"https://{GetRegionUrlPrefix(region)}serveme.tf/api/reservations?api_key={GetApiKeyToUse(region)}", requestBody);
             var content = await response.Content.ReadAsStringAsync();
             JObject reservationResponse;
+            // Parses the response into a JObject to be read by the discord bot
             try
             {
                 reservationResponse = JObject.Parse(content);
@@ -62,15 +66,18 @@ namespace SfsTF2ServeMeBot.Services
                 Console.WriteLine($"JSON Parsing Error: {ex.Message}");
                 throw;
             }
-
+            // Returns the response to the bot
             return reservationResponse;
         }
 
+        //Finds available servers for a reservation
         public async Task<JObject> FindServersAsync(int region, string startDate, string startTime, string endDate, string endTime)
         {
+            // Gets date and time with the regional time differences
             var startsAt = $"{startDate}T{startTime}:00.000{GetRegionTimeOffset(region)}";
             var endsAt = $"{endDate}T{endTime}:00.000{GetRegionTimeOffset(region)}";
-
+            
+            // Builds the find server request
             var requestBody = new
             {
                 reservation = new
@@ -79,11 +86,11 @@ namespace SfsTF2ServeMeBot.Services
                     ends_at = endsAt
                 }
             };
+            // Sends the find server request
             var response = await _httpClient.PostAsJsonAsync(
                 $"https://{GetRegionUrlPrefix(region)}serveme.tf/api/reservations/find_servers?api_key={GetApiKeyToUse(region)}", requestBody);
             var content = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"Response Content: {content}");
-
+            // Parses the response into a JObject to be read by the discord bot
             JObject availableServers;
             try
             {
@@ -98,19 +105,22 @@ namespace SfsTF2ServeMeBot.Services
             return availableServers;
         }
 
-
+        // Allow to update a preexisting reservation
         public async Task<JObject> UpdateReservationAsync(int region, int reservationId, int? serverId = null, string? startDate = null, string? startTime = null,
             string? endDate = null, string? endTime = null, string? password = null, string? stvPassword = null, string? map = null,
             int? serverConfigId = null, bool? enablePlugins = null, bool? enableDemos = null, bool? autoEnd = null)
         {
+            // Gets the reservation details
             var reservationDetailsResponse = 
                 await _httpClient.GetAsync(
                     $"https://{GetRegionUrlPrefix(region)}serveme.tf/api/reservations/{reservationId}?api_key={GetApiKeyToUse(region)}");
             if (!reservationDetailsResponse.IsSuccessStatusCode)
             {
+                // Throws a failure message
                 throw new HttpRequestException($"Failed to retrieve reservation details. Status: {(int)reservationDetailsResponse.StatusCode}");
             }
-
+            
+            // Gets the response from the API
             var reservationContent = await reservationDetailsResponse.Content.ReadAsStringAsync();
             var reservationJson = JObject.Parse(reservationContent);
 
@@ -122,18 +132,22 @@ namespace SfsTF2ServeMeBot.Services
             dynamic reservationUpdate = new ExpandoObject();
 
             if (serverId.HasValue) reservationUpdate.server_id = serverId;
+            
+            // Checks if the start date and time are not null, if not run the start time adjustment
             if (!string.IsNullOrEmpty(startDate) && !string.IsNullOrEmpty(startTime))
             {
                 string utcOffset = GetRegionTimeOffset(region);
                 reservationUpdate.starts_at = $"{startDate}T{startTime}:00.000{utcOffset}";
             }
-
+            
+            // Checks if the end date and time are not null, if not run the end time adjustment
             if (!string.IsNullOrEmpty(endDate) && !string.IsNullOrEmpty(endTime))
             {
                 string utcOffset = GetRegionTimeOffset(region);
                 reservationUpdate.ends_at = $"{endDate}T{endTime}:00.000{utcOffset}";
             }
 
+            // Checks if all other parameters, such as password, stv password, map, etc are not null, and if so, adjust it
             if (!string.IsNullOrEmpty(password)) reservationUpdate.password = password;
             if (!string.IsNullOrEmpty(stvPassword)) reservationUpdate.tv_password = stvPassword;
             if (!string.IsNullOrEmpty(map)) reservationUpdate.first_map = map;
@@ -142,6 +156,7 @@ namespace SfsTF2ServeMeBot.Services
             if (enableDemos.HasValue) reservationUpdate.enable_demos_tf = enableDemos.Value;
             if (autoEnd.HasValue) reservationUpdate.auto_end = autoEnd.Value;
 
+            // Builds and send the request to change a reservation
             var requestBody = new { reservation = reservationUpdate };
             var jsonContent = JsonConvert.SerializeObject(requestBody);
             var httpContent = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
@@ -149,7 +164,8 @@ namespace SfsTF2ServeMeBot.Services
             {
                 Content = httpContent
             };
-
+            
+            // Gets the response from the API to update the reservation
             var response = await _httpClient.SendAsync(request);
             var content = await response.Content.ReadAsStringAsync();
     
@@ -170,6 +186,8 @@ namespace SfsTF2ServeMeBot.Services
                 Console.WriteLine($"JSON Parsing Error: {ex.Message}");
                 throw;
             }
+            
+            // Gets the reservation info to send back to the discord bot
             var updatedReservationResponse = 
                 await _httpClient.GetAsync(
                     $"https://{GetRegionUrlPrefix(region)}serveme.tf/api/reservations/{reservationId}?api_key={GetApiKeyToUse(region)}");
@@ -182,7 +200,6 @@ namespace SfsTF2ServeMeBot.Services
             try
             {
                 updatedReservation = JObject.Parse(updatedContent);
-                Console.WriteLine($"Updated reservation data: {updatedReservation}");
             }
             catch (JsonReaderException ex)
             {
@@ -192,6 +209,9 @@ namespace SfsTF2ServeMeBot.Services
 
             return updatedReservation;
         }
+        
+        // Region Time Offset is to cover timezones of users that are likely to use this discord bot.
+        // I.E. all US Timezones, Europe, Australia, and South East Asia
         private string GetRegionTimeOffset(int region)
         {
             string utcOffset = "-05:00";
@@ -231,6 +251,7 @@ namespace SfsTF2ServeMeBot.Services
             return utcOffset;
         }
 
+        // Uses the regional time offset to determine which region should be used
         private string GetRegionUrlPrefix(int region)
         {
             string UrlPrefix = "na.";
@@ -254,7 +275,8 @@ namespace SfsTF2ServeMeBot.Services
             }
             return UrlPrefix;
         }
-
+        
+        // Uses the regional time offset to determine which API key should be used
         private string GetApiKeyToUse(int region)
         {
             string ApiKey = _apiKeyNA;

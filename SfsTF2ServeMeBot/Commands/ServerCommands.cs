@@ -112,7 +112,7 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                 .WithTitle("RCON Info")
                 .AddField("RCON Address", server["ip_and_port"]?.ToString() ?? "N/A", true)
                 .AddField("RCON Password", reservation["rcon"]?.ToString() ?? "N/A", true)
-                .AddField("RCON Command", $"`rcon_address {server["ip_and_port"]}; rcon_password {reservation["rcon"]}`")
+                .AddField("RCON Command", $"```yaml\nrcon_address {server["ip_and_port"]}; rcon_password {reservation["rcon"]}\n```")
                 .WithColor(Color.Green)
                 .WithFooter(EmbedFooterModule.Footer)
                 .Build();

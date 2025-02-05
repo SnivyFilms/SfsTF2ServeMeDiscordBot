@@ -174,8 +174,8 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
             var embed = BuildServerEmbed(servers, pageIndex);
         
             var buttons = new ComponentBuilder()
-                .WithButton(":arrow_left:", "prev_page", ButtonStyle.Primary, disabled: pageIndex == 0)
-                .WithButton(":arrow_right:", "next_page", ButtonStyle.Primary, disabled: (pageIndex + 1) * 10 >= servers.Count);
+                .WithButton("\u2190", "prev_page", ButtonStyle.Primary, disabled: pageIndex == 0)
+                .WithButton("\u2192", "next_page", ButtonStyle.Primary, disabled: (pageIndex + 1) * 24 >= servers.Count);
 
             var message = await FollowupAsync(embed: embed.Build(), components: buttons.Build());
 
@@ -195,8 +195,8 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
 
                 var newEmbed = BuildServerEmbed(servers, pageIndex);
                 var updatedButtons = new ComponentBuilder()
-                    .WithButton(":arrow_left:", "prev_page", ButtonStyle.Primary, disabled: pageIndex == 0)
-                    .WithButton(":arrow_right:", "next_page", ButtonStyle.Primary, disabled: (pageIndex + 1) * 24 >= servers.Count);
+                    .WithButton("\u2190", "prev_page", ButtonStyle.Primary, disabled: pageIndex == 0)
+                    .WithButton("\u2192", "next_page", ButtonStyle.Primary, disabled: (pageIndex + 1) * 24 >= servers.Count);
 
                 await component.UpdateAsync(msg =>
                 {

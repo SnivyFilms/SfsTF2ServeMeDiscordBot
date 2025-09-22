@@ -26,31 +26,31 @@ namespace SfsTF2ServeMeBot.Services
         
         // Create Reservation Command Handle
         public async Task<JObject> CreateReservationAsync(int region, string startDate, string startTime, string endDate,
-            string endTime, string passwordString, string stvPasswordString, string rconString, string mapString, 
-            int serverId, int? serverConfigId, bool enablePlugins, bool enableDemos, bool autoEnd)
+        string endTime, string passwordString, string stvPasswordString, string rconString, string mapString,
+        int serverId, int? serverConfigId, bool enablePlugins, bool enableDemos, bool autoEnd, bool? disableDemoCheck = null)
         {
             // Gets start time and the regional time differences for the reservation, combines date and time into one
             var startsAt = $"{startDate}T{startTime}:00.000{GetRegionTimeOffset(region)}";
             var endsAt = $"{endDate}T{endTime}:00.000{GetRegionTimeOffset(region)}";
 
-            // Main body of the reservation, covers basically everything else inputted
+            dynamic reservationData = new ExpandoObject();
+            reservationData.starts_at = startsAt;
+            reservationData.ends_at = endsAt;
+            reservationData.password = passwordString;
+            reservationData.tv_password = stvPasswordString;
+            reservationData.rcon = rconString;
+            reservationData.first_map = mapString;
+            reservationData.server_id = serverId;
+            reservationData.server_config_id = serverConfigId;
+            reservationData.enable_plugins = enablePlugins;
+            reservationData.enable_demos_tf = enableDemos;
+            reservationData.auto_end = autoEnd;
+            if (disableDemoCheck.HasValue) reservationData.disable_democheck = !disableDemoCheck.Value;
             var requestBody = new
             {
-                reservation = new
-                {
-                    starts_at = startsAt,
-                    ends_at = endsAt,
-                    password = passwordString,
-                    tv_password = stvPasswordString,
-                    rcon = rconString,
-                    first_map = mapString,
-                    server_id = serverId,
-                    server_config_id = serverConfigId,
-                    enable_plugins = enablePlugins,
-                    enable_demos_tf = enableDemos,
-                    auto_end = autoEnd
-                }
+                reservation = reservationData
             };
+
             // Sends api request
             var response = await _httpClient.PostAsJsonAsync(
                 $"https://{GetRegionUrlPrefix(region)}serveme.tf/api/reservations?api_key={GetApiKeyToUse(region)}", requestBody);
@@ -108,7 +108,7 @@ namespace SfsTF2ServeMeBot.Services
         // Allow to update a preexisting reservation
         public async Task<JObject> UpdateReservationAsync(int region, int reservationId, int? serverId = null, string? startDate = null, string? startTime = null,
             string? endDate = null, string? endTime = null, string? password = null, string? stvPassword = null, string? map = null,
-            int? serverConfigId = null, bool? enablePlugins = null, bool? enableDemos = null, bool? autoEnd = null)
+            int? serverConfigId = null, bool? enablePlugins = null, bool? enableDemos = null, bool? autoEnd = null, bool? demoCheck = false)
         {
             // Gets the reservation details
             var reservationDetailsResponse = 
@@ -155,6 +155,7 @@ namespace SfsTF2ServeMeBot.Services
             if (enablePlugins.HasValue) reservationUpdate.enable_plugins = enablePlugins.Value;
             if (enableDemos.HasValue) reservationUpdate.enable_demos_tf = enableDemos.Value;
             if (autoEnd.HasValue) reservationUpdate.auto_end = autoEnd.Value;
+            if (demoCheck.HasValue) reservationUpdate.disable_democheck = !demoCheck.Value;
 
             // Builds and send the request to change a reservation
             var requestBody = new { reservation = reservationUpdate };

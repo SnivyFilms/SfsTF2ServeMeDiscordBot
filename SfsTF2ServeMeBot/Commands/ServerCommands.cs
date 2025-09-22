@@ -42,7 +42,8 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
         [Summary("StartingConfig", "This is the config that the server will start on, use /config_ids to get the config ids")] int startingConfigId,
         [Summary("EnablePlugins", "Enables/Disables plugins, such as SOAPs.")] bool enablePlugins,
         [Summary("EnableDemos", "Enables/Disables STV demo uploading to demos.tf.")] bool enableDemos,
-        [Summary("AutoEnd", "Enables/Disables the server from ending when the server empties out.")] bool autoEnd)
+        [Summary("AutoEnd", "Enables/Disables the server from ending when the server empties out.")] bool autoEnd,
+        [Summary("DemoCheck", "If true, Demo Check for RGL games will be enabled, otherwise it will be disabled. (Empty = false)")]bool? demoCheck = null)
     {
         await DeferAsync();
 
@@ -56,7 +57,7 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
 
             var reservationResponse = await _servemeService.CreateReservationAsync(
                 region, startDate, startTime, endDate, endTime, password, 
-                stvPassword, rcon, map, serverId, startingConfigId, enablePlugins, enableDemos, autoEnd);
+                stvPassword, rcon, map, serverId, startingConfigId, enablePlugins, enableDemos, autoEnd, demoCheck);
 
             var reservation = reservationResponse["reservation"];
             var server = reservation["server"];
@@ -66,14 +67,11 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                 .AddField("Reservation ID", reservation["id"]?.ToString() ?? "N/A", true)
                 .AddField("Start Time", discordStartTimestamp, true)
                 .AddField("End Time", discordEndTimestamp, true)
-                .AddField("Server IP", server["ip_and_port"]?.ToString() ?? "N/A", true)
-                .AddField("SDR IP", reservation["sdr_ip"] + ":" + reservation["sdr_port"]?.ToString() ?? "N/A", true)
-                .AddField("Password", reservation["password"]?.ToString() ?? "N/A", true)
-                .AddField("STV Password", reservation["tv_password"]?.ToString() ?? "N/A", true)
                 .AddField("Starting Map", reservation["first_map"]?.ToString() ?? "N/A", true)
                 .AddField("Plugins Enabled", reservation["enable_plugins"]?.ToString() ?? "N/A", true)
                 .AddField("Enabled Demos.tf", reservation["enable_demos_tf"]?.ToString() ?? "N/A", true)
                 .AddField("Auto End Enabled", reservation["auto_end"]?.ToString() ?? "N/A", true)
+                .AddField("Demo Check Enabled", server["disable_democheck"].ToString() ?? "N/A", true)
                 .AddField("Selected Config", _configNames.ContainsKey(startingConfigId) ? _configNames[startingConfigId] : "Unknown Config", true)
                 .AddField("Connect Info", $"```yaml\nconnect {server["ip_and_port"]}; password {reservation["password"]}\n```", false)
                 .AddField("STV Connect Info", $"```yaml\nconnect {server["ip"]}:{reservation["tv_port"]}; password {reservation["tv_password"]}\n```", false)
@@ -242,7 +240,8 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
         [Summary("StartingConfig", "This is where you can change the config that the server will start on.")] int? startingConfigId = null,
         [Summary("EnablePlugins", "This is where you can Enable/Disable plugins, such as SOAPs.")] bool? enablePlugins = null,
         [Summary("EnableDemos", "This is where you can Enable/Disable STV demo uploading to demos.tf.")] bool? enableDemos = null,
-        [Summary("AutoEnd", "This is where you can change the Enable/Disable the server from ending when the server empties out.")] bool? autoEnd = null)
+        [Summary("AutoEnd", "This is where you can change the Enable/Disable the server from ending when the server empties out.")] bool? autoEnd = null,
+        [Summary("DemoCheck", "If true, Demo Check for RGL games will be enabled, otherwise it will be disabled.")] bool? demoCheck = null)
     {
         await DeferAsync(); 
         try
@@ -261,7 +260,8 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                 startingConfigId,
                 enablePlugins,
                 enableDemos,
-                autoEnd);
+                autoEnd,
+                demoCheck);
             var reservation = updatedReservation["reservation"];
             var server = reservation["server"];
 
@@ -274,14 +274,11 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                 .AddField("Reservation ID", reservation["id"]?.ToString() ?? "N/A", true)
                 .AddField("Start Time", reservation["starts_at"]?.ToString() ?? "N/A", true)
                 .AddField("End Time", reservation["ends_at"]?.ToString() ?? "N/A", true)
-                .AddField("Server IP", server["ip_and_port"]?.ToString() ?? "N/A", true)
-                .AddField("SDR IP", $"{reservation["sdr_ip"]}:{reservation["sdr_port"]}" ?? "N/A", true)
-                .AddField("Password", reservation["password"]?.ToString() ?? "N/A", true)
-                .AddField("STV Password", reservation["tv_password"]?.ToString() ?? "N/A", true)
                 .AddField("Starting Map", reservation["first_map"]?.ToString() ?? "N/A", true)
                 .AddField("Plugins Enabled", reservation["enable_plugins"]?.ToString() ?? "N/A", true)
                 .AddField("Demos Enabled", reservation["enable_demos_tf"]?.ToString() ?? "N/A", true)
                 .AddField("Auto End Enabled", reservation["auto_end"]?.ToString() ?? "N/A", true)
+                .AddField("Demo Check Enabled", server["disable_democheck"].ToString() ?? "N/A", true)
                 .AddField("Selected Config", configName, true)
                 .AddField("Connect Info", $"```yaml\nconnect {server["ip_and_port"]}; password {reservation["password"]}\n```", false)
                 .AddField("STV Connect Info", $"```yaml\nconnect {server["ip"]}:{reservation["tv_port"]}; password {reservation["tv_password"]}\n```", false)

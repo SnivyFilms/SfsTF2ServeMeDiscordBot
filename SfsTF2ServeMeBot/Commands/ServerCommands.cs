@@ -71,7 +71,7 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                 .AddField("Plugins Enabled", reservation["enable_plugins"]?.ToString() ?? "N/A", true)
                 .AddField("Enabled Demos.tf", reservation["enable_demos_tf"]?.ToString() ?? "N/A", true)
                 .AddField("Auto End Enabled", reservation["auto_end"]?.ToString() ?? "N/A", true)
-                .AddField("Demo Check Enabled", server["disable_democheck"].ToString() ?? "N/A", true)
+                .AddField("Demo Check Enabled", reservation["disable_democheck"]?.ToString() == null ? "N/A" : reservation["disable_democheck"]!.Value<bool>() ? "False" : "True", true)
                 .AddField("Selected Config", _configNames.ContainsKey(startingConfigId) ? _configNames[startingConfigId] : "Unknown Config", true)
                 .AddField("Connect Info", $"```yaml\nconnect {server["ip_and_port"]}; password {reservation["password"]}\n```", false)
                 .AddField("STV Connect Info", $"```yaml\nconnect {server["ip"]}:{reservation["tv_port"]}; password {reservation["tv_password"]}\n```", false)

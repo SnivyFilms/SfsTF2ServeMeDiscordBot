@@ -27,7 +27,7 @@ namespace SfsTF2ServeMeBot.Services
         // Create Reservation Command Handle
         public async Task<JObject> CreateReservationAsync(int region, string startDate, string startTime, string endDate,
         string endTime, string passwordString, string stvPasswordString, string rconString, string mapString,
-        int serverId, int? serverConfigId, bool enablePlugins, bool enableDemos, bool autoEnd, bool? disableDemoCheck = null)
+        int serverId, int? serverConfigId, bool enablePlugins, bool enableDemos, bool autoEnd, bool? demoCheck)
         {
             // Gets start time and the regional time differences for the reservation, combines date and time into one
             var startsAt = $"{startDate}T{startTime}:00.000{GetRegionTimeOffset(region)}";
@@ -45,7 +45,10 @@ namespace SfsTF2ServeMeBot.Services
             reservationData.enable_plugins = enablePlugins;
             reservationData.enable_demos_tf = enableDemos;
             reservationData.auto_end = autoEnd;
-            if (disableDemoCheck.HasValue) reservationData.disable_democheck = !disableDemoCheck.Value;
+            if (demoCheck.HasValue && demoCheck.Value)
+                reservationData.disable_democheck = false;
+            else if (demoCheck.HasValue && !demoCheck.Value)
+                reservationData.disable_democheck = true;
             var requestBody = new
             {
                 reservation = reservationData
@@ -55,6 +58,7 @@ namespace SfsTF2ServeMeBot.Services
             var response = await _httpClient.PostAsJsonAsync(
                 $"https://{GetRegionUrlPrefix(region)}serveme.tf/api/reservations?api_key={GetApiKeyToUse(region)}", requestBody);
             var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine(content);
             JObject reservationResponse;
             // Parses the response into a JObject to be read by the discord bot
             try

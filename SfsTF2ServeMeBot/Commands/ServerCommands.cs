@@ -74,7 +74,7 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                 .AddField("Demo Check Enabled", reservation["disable_democheck"]?.ToString() == null ? "N/A" : reservation["disable_democheck"]!.Value<bool>() ? "False" : "True", true)
                 .AddField("Selected Config", _configNames.ContainsKey(startingConfigId) ? _configNames[startingConfigId] : "Unknown Config", true)
                 .AddField("Connect Info", $"```yaml\nconnect {server["ip_and_port"]}; password {reservation["password"]}\n```", false)
-                .AddField("STV Connect Info", $"```yaml\nconnect {server["ip"]}:{reservation["tv_port"]}; password {reservation["tv_password"]}\n```", false)
+                .AddField("STV Connect Info", $"```yaml\nconnect {server["ip"]}:{reservation["tv_port"]}; password {reservation["tv_password"]}\n```",false)
                 .AddField("SDR Connect Info", $"```yaml\nconnect {reservation["sdr_ip"]}:{reservation["sdr_port"]}; password {reservation["password"]}\n```", false)
                 .AddField("SDR STV Connect Info", $"```yaml\nconnect {reservation["sdr_ip"]}:{reservation["sdr_tv_port"]}; password {reservation["tv_relaypassword"]}\n```", false)
                 .WithColor(Color.Green)
@@ -86,8 +86,6 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
             var dmChannel = await Context.User.CreateDMChannelAsync();
             var dmEmbed = new EmbedBuilder()
                 .WithTitle("RCON Info")
-                .AddField("RCON Address", server["ip_and_port"]?.ToString() ?? "N/A", true)
-                .AddField("RCON Password", reservation["rcon"]?.ToString() ?? "N/A", true)
                 .AddField("RCON Command", $"```yaml\nrcon_address {server["ip_and_port"]}; rcon_password {reservation["rcon"]}\n```")
                 .WithColor(Color.Green)
                 .WithFooter(EmbedFooterModule.Footer)

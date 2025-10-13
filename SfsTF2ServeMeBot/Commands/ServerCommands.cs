@@ -18,32 +18,32 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
 
     [SlashCommand("reserve_server", "Reserve a server")]
     public async Task ReserveServer(
-        [Summary("Region", "Determines which region is used, NA, EU, SEA, AU"),
-         Choice("US EDT (-4) ", 1),
-         Choice("US EST / CDT (-5)", 2),
-         Choice("US CST / MDT (-6)", 3),
-         Choice("US MST / PDT (-7)", 4),
-         Choice("US PST / AKDT (-8)", 5),
-         Choice("US AKST (-9)", 6),
-         Choice("US HST (-10)", 7),
-         Choice("Europe (+1)", 8),
-         Choice("South East Asia (+11)", 9),
-         Choice("Australia (+8)", 10)]
-        int region,
-        [Summary("StartDate", "The start date in YYYY-MM-DD. I.E. 2024-04-20 for April 20th, 2024")] string startDate,
-        [Summary("StartTime", "The start time in a 24 hour clock format HH:MM. I.E. 21:30 for 9:30 PM.")] string startTime,
-        [Summary("EndDate", "The start date in YYYY-MM-DD. I.E. 2024-06-09 for June 9th, 2024")] string endDate,
-        [Summary("EndTime", "The start time in a 24 hour clock format HH:MM. I.E. 23:30 for 11:30 PM.")] string endTime,
-        [Summary("ServerPassword", "This is the password that people will use to connect to the server.")] string password,
-        [Summary("StvPassword", "This is the password that people will use to connect to the STV of server.")] string stvPassword,
-        [Summary("RconPassword", "Rcon Password, This cannot be changed after reserving the server. This will be DMed to you.")] string rcon,
-        [Summary("Map", "This is the map that the server will start on.")] string map,
-        [Summary("ServerId", "This is the ServerId of the server you want to reserve, use /find_server to get the ServerId.")]int serverId,
-        [Summary("StartingConfig", "This is the config that the server will start on, use /config_ids to get the config ids")] int startingConfigId,
-        [Summary("EnablePlugins", "Enables/Disables plugins, such as SOAPs.")] bool enablePlugins,
-        [Summary("EnableDemos", "Enables/Disables STV demo uploading to demos.tf.")] bool enableDemos,
-        [Summary("AutoEnd", "Enables/Disables the server from ending when the server empties out.")] bool autoEnd,
-        [Summary("DemoCheck", "If true, Demo Check for RGL games will be enabled, otherwise it will be disabled. (Empty = false)")]bool? demoCheck = null)
+    [Summary("Region", "Determines which region is used, NA, EU, SEA, AU"),
+     Choice("US EDT (-4) ", 1),
+     Choice("US EST / CDT (-5)", 2),
+     Choice("US CST / MDT (-6)", 3),
+     Choice("US MST / PDT (-7)", 4),
+     Choice("US PST / AKDT (-8)", 5),
+     Choice("US AKST (-9)", 6),
+     Choice("US HST (-10)", 7),
+     Choice("Europe (+1)", 8),
+     Choice("South East Asia (+11)", 9),
+     Choice("Australia (+8)", 10)]
+    int region,
+    [Summary("StartDate", "The start date in YYYY-MM-DD. I.E. 2024-04-20 for April 20th, 2024")] string startDate,
+    [Summary("StartTime", "The start time in a 24 hour clock format HH:MM. I.E. 21:30 for 9:30 PM.")] string startTime,
+    [Summary("EndDate", "The start date in YYYY-MM-DD. I.E. 2024-06-09 for June 9th, 2024")] string endDate,
+    [Summary("EndTime", "The start time in a 24 hour clock format HH:MM. I.E. 23:30 for 11:30 PM.")] string endTime,
+    [Summary("ServerPassword", "This is the password that people will use to connect to the server.")] string password,
+    [Summary("StvPassword", "This is the password that people will use to connect to the STV of server.")] string stvPassword,
+    [Summary("RconPassword", "Rcon Password, This cannot be changed after reserving the server. This will be DMed to you.")] string rcon,
+    [Summary("Map", "This is the map that the server will start on.")] string map,
+    [Summary("ServerId", "This is the ServerId of the server you want to reserve, use /find_server to get the ServerId.")]int serverId,
+    [Summary("StartingConfig", "This is the config that the server will start on, use /config_ids to get the config ids")] int startingConfigId,
+    [Summary("EnablePlugins", "Enables/Disables plugins, such as SOAPs.")] bool enablePlugins,
+    [Summary("EnableDemos", "Enables/Disables STV demo uploading to demos.tf.")] bool enableDemos,
+    [Summary("AutoEnd", "Enables/Disables the server from ending when the server empties out.")] bool autoEnd,
+    [Summary("DemoCheck", "If true, Demo Check for RGL games will be enabled, otherwise it will be disabled. (Empty = false)")]bool? demoCheck = null)
     {
         await DeferAsync();
 
@@ -56,10 +56,58 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
             string discordEndTimestamp = UnixTimestampModule.FormatForDiscord(endUnix);
 
             var reservationResponse = await _servemeService.CreateReservationAsync(
-                region, startDate, startTime, endDate, endTime, password, 
+                region, startDate, startTime, endDate, endTime, password,
                 stvPassword, rcon, map, serverId, startingConfigId, enablePlugins, enableDemos, autoEnd, demoCheck);
 
             var reservation = reservationResponse["reservation"];
+        
+            // Check if the reservation status is "Unknown" which indicates an error
+            if (reservation["status"]?.ToString() == "Unknown")
+            {
+                var errorEmbed = new EmbedBuilder()
+                    .WithTitle("Server Reservation Failed")
+                    .WithColor(Color.Red)
+                    .WithFooter(EmbedFooterModule.Footer);
+            
+                // Check for specific errors
+                if (reservation["errors"] != null)
+                {
+                    var errors = reservation["errors"];
+                
+                    if (errors["first_map"] != null && errors["first_map"]["error"]?.ToString() == "does not exist")
+                    {
+                        errorEmbed.AddField("Error", $"The map '{map}' does not exist. Please check the map name and try again.", false);
+                    }
+                    else
+                    {
+                        // Extract all errors
+                        var errorFields = new List<string>();
+                        foreach (var property in errors.Children<JProperty>())
+                        {
+                            var fieldName = property.Name;
+                            var fieldErrors = property.Value["error"]?.ToString() ?? "Unknown error";
+                            errorFields.Add($"{fieldName}: {fieldErrors}");
+                        }
+                    
+                        if (errorFields.Any())
+                        {
+                            errorEmbed.AddField("Errors", string.Join("\n", errorFields), false);
+                        }
+                        else
+                        {
+                            errorEmbed.AddField("Unknown Error", "An unknown error occurred with the reservation.", false);
+                        }
+                    }
+                }
+                else
+                {
+                    errorEmbed.AddField("Unknown Error", "An unknown error occurred with the reservation.", false);
+                }
+            
+                await FollowupAsync(embed: errorEmbed.Build());
+                return;
+            }
+
             var server = reservation["server"];
 
             var embed = new EmbedBuilder()
@@ -94,7 +142,7 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
         }
         catch (HttpRequestException ex)
         {
-            // Handle any errors by informing the user
+            // Handle HTTP errors
             var embed = new EmbedBuilder()
                 .WithTitle("Server Reservation Failure")
                 .AddField("Reason:", "Do you have the correct region selected?\nDid you make sure that the start time and end time are in the correct format?\nDid you make the end time end before the start time?", true)
@@ -103,11 +151,20 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                 .WithFooter(EmbedFooterModule.Footer)
                 .Build();
             await FollowupAsync(embed: embed);
-            //await FollowupAsync("There was an error reserving the server. Please try again later.");
-            //Console.WriteLine($"Error creating reservation: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            // Handle general errors
+            var embed = new EmbedBuilder()
+                .WithTitle("Server Reservation Failure")
+                .AddField("Error", ex.Message, true)
+                .WithColor(Color.Red)
+                .WithFooter(EmbedFooterModule.Footer)
+                .Build();
+            await FollowupAsync(embed: embed);
         }
     }
-
+    
     [SlashCommand("find_servers", "Find available TF2 servers")]
     public async Task FindServers(
         [Summary("Region", "Determines which region is used, NA, EU, SEA, AU"),

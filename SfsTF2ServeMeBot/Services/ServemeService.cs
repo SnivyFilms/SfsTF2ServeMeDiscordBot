@@ -214,6 +214,35 @@ namespace SfsTF2ServeMeBot.Services
 
             return updatedReservation;
         }
+        // Get reservation details by ID
+        public async Task<JObject> GetReservationAsync(int region, int reservationId)
+        {
+            // Send request to get reservation details
+            var response = await _httpClient.GetAsync(
+                $"https://{GetRegionUrlPrefix(region)}serveme.tf/api/reservations/{reservationId}?api_key={GetApiKeyToUse(region)}");
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException($"Failed to retrieve reservation details. Status: {(int)response.StatusCode}");
+            }
+            
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine(content);
+            
+            JObject reservationResponse;
+            try
+            {
+                reservationResponse = JObject.Parse(content);
+            }
+            catch (JsonReaderException ex)
+            {
+                Console.WriteLine($"JSON Parsing Error: {ex.Message}");
+                throw;
+            }
+            
+            return reservationResponse;
+        }
+        
         
         // Region Time Offset is to cover timezones of users that are likely to use this discord bot.
         // I.E. all US Timezones, Europe, Australia, and South East Asia

@@ -91,7 +91,7 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
                     
                         if (errorFields.Any())
                         {
-                            errorEmbed.AddField("Errors", string.Join("\n", errorFields), false);
+                            errorEmbed.AddField("Error", string.Join("\n", errorFields), false);
                         }
                         else
                         {
@@ -357,6 +357,131 @@ public class ServerCommands : InteractionModuleBase<SocketInteractionContext>
             await FollowupAsync(embed: embed);
         }
     }
+    
+[SlashCommand("get_reservation", "Get details of an existing reservation")]
+    public async Task GetReservation(
+        [Summary("Region", "Select the region where your server is located"),
+         Choice("North America", 1),
+         Choice("Europe", 8),
+         Choice("South East Asia", 9),
+         Choice("Australia", 10)]
+        int region,
+        [Summary("ReservationId", "The ID of the reservation you want to retrieve.")] int reservationId)
+    {
+        await DeferAsync();
+    
+        try
+        {
+            var reservationResponse = await _servemeService.GetReservationAsync(region, reservationId);
+            var reservation = reservationResponse["reservation"];
+    
+            // Check if the reservation status is "Unknown" which indicates an error
+            if (reservation["status"]?.ToString() == "Unknown")
+            {
+                var errorEmbed = new EmbedBuilder()
+                    .WithTitle("Failed to Retrieve Reservation")
+                    .WithColor(Color.Red)
+                    .WithFooter(EmbedFooterModule.Footer);
+    
+                // Check for specific errors
+                if (reservation["errors"] != null)
+                {
+                    var errors = reservation["errors"];
+                    var errorFields = new List<string>();
+                    
+                    foreach (var property in errors.Children<JProperty>())
+                    {
+                        var fieldName = property.Name;
+                        var fieldErrors = property.Value["error"]?.ToString() ?? "Unknown error";
+                        errorFields.Add($"{fieldName}: {fieldErrors}");
+                    }
+    
+                    if (errorFields.Any())
+                    {
+                        errorEmbed.AddField("Error", string.Join("\n", errorFields), false);
+                    }
+                    else
+                    {
+                        errorEmbed.AddField("Unknown Error", "An unknown error occurred while retrieving the reservation.", false);
+                    }
+                }
+                else
+                {
+                    errorEmbed.AddField("Unknown Error", "An unknown error occurred while retrieving the reservation.", false);
+                }
+    
+                await FollowupAsync(embed: errorEmbed.Build());
+                return;
+            }
+    
+            var server = reservation["server"];
+
+            string startsAt = reservation["starts_at"]?.ToString() ?? string.Empty;
+            string endsAt = reservation["ends_at"]?.ToString() ?? string.Empty;
+
+            long startUnix = 0;
+            long endUnix = 0;
+
+            if (!string.IsNullOrEmpty(startsAt) && DateTime.TryParse(startsAt, out DateTime startDateTime))
+            {
+                startUnix = ((DateTimeOffset)startDateTime).ToUnixTimeSeconds();
+            }
+
+            if (!string.IsNullOrEmpty(endsAt) && DateTime.TryParse(endsAt, out DateTime endDateTime))
+            {
+                endUnix = ((DateTimeOffset)endDateTime).ToUnixTimeSeconds();
+            }
+
+            string discordStartTimestamp = startUnix > 0 ? UnixTimestampModule.FormatForDiscord(startUnix) : "N/A";
+            string discordEndTimestamp = endUnix > 0 ? UnixTimestampModule.FormatForDiscord(endUnix) : "N/A";
+    
+            int serverConfigId = reservation["server_config_id"]?.Value<int>() ?? -1;
+            string configName = _configNames.ContainsKey(serverConfigId) ? _configNames[serverConfigId] : "Unknown Config";
+    
+            var embed = new EmbedBuilder()
+                .WithTitle("Reservation Details")
+                .AddField("Reservation ID", reservation["id"]?.ToString() ?? "N/A", true)
+                .AddField("Start Time", discordStartTimestamp, true)
+                .AddField("End Time", discordEndTimestamp, true)
+                .AddField("Starting Map", reservation["first_map"]?.ToString() ?? "N/A", true)
+                .AddField("Plugins Enabled", reservation["enable_plugins"]?.ToString() ?? "N/A", true)
+                .AddField("Enabled Demos.tf", reservation["enable_demos_tf"]?.ToString() ?? "N/A", true)
+                .AddField("Auto End Enabled", reservation["auto_end"]?.ToString() ?? "N/A", true)
+                .AddField("Demo Check Enabled", reservation["disable_democheck"]?.ToString() == null ? "N/A" : reservation["disable_democheck"]!.Value<bool>() ? "False" : "True", true)
+                .AddField("Selected Config", configName, true)
+                .AddField("Connect Info", $"```yaml\nconnect {server["ip_and_port"]}; password {reservation["password"]}\n```", false)
+                .AddField("STV Connect Info", $"```yaml\nconnect {server["ip"]}:{reservation["tv_port"]}; password {reservation["tv_password"]}\n```", false)
+                .AddField("SDR Connect Info", $"```yaml\nconnect {reservation["sdr_ip"]}:{reservation["sdr_port"]}; password {reservation["password"]}\n```", false)
+                .AddField("SDR STV Connect Info", $"```yaml\nconnect {reservation["sdr_ip"]}:{reservation["sdr_tv_port"]}; password {reservation["tv_relaypassword"]}\n```", false)
+                .WithColor(Color.Green)
+                .WithFooter(EmbedFooterModule.Footer)
+                .Build();
+    
+            await FollowupAsync(embed: embed);
+        }
+        catch (HttpRequestException ex)
+        {
+            var embed = new EmbedBuilder()
+                .WithTitle("Failed to Retrieve Reservation")
+                .AddField("Reason:", "The reservation may not exist or you may have selected the wrong region.", true)
+                .AddField("Error Code", ex.Message, true)
+                .WithColor(Color.Red)
+                .WithFooter(EmbedFooterModule.Footer)
+                .Build();
+            await FollowupAsync(embed: embed);
+        }
+        catch (Exception ex)
+        {
+            var embed = new EmbedBuilder()
+                .WithTitle("Failed to Retrieve Reservation")
+                .AddField("Error", ex.Message, true)
+                .WithColor(Color.Red)
+                .WithFooter(EmbedFooterModule.Footer)
+                .Build();
+            await FollowupAsync(embed: embed);
+        }
+    }
+    
     
     [SlashCommand("config_ids", "Get all available config IDs")]
     public async Task GetConfigIds()
